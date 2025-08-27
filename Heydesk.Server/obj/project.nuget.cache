@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "S99ywjvY8O0=",
+  "success": true,
+  "projectFilePath": "/Users/manasseh/Projects/hacks/TiDB/Heydesk/Heydesk.Server/Heydesk.Server.csproj",
+  "expectedPackageFiles": [
+    "/Users/manasseh/.nuget/packages/microsoft.aspnetcore.openapi/9.0.8/microsoft.aspnetcore.openapi.9.0.8.nupkg.sha512",
+    "/Users/manasseh/.nuget/packages/microsoft.openapi/1.6.17/microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
