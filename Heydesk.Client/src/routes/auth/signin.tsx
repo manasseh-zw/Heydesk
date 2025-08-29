@@ -12,12 +12,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Google } from "@/components/icons";
+import { Mail, Eye, EyeOff } from "lucide-react";
+import { useId, useState } from "react";
 
 export const Route = createFileRoute("/auth/signin")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const emailId = useId();
+  const passwordId = useId();
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
   return (
     <main className="h-screen w-full flex justify-center items-center">
       <div className="flex flex-col gap-8">
@@ -37,13 +43,35 @@ function RouteComponent() {
           </CardHeader>
 
           <CardContent className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label className="text-sm ml-0.5" htmlFor="email-sign-in">Email</Label>
-              <Input id="email-sign-in" type="email" placeholder="m@example.com" />
+            <div className="relative">
+              <Label htmlFor={emailId} className="sr-only">Email</Label>
+              <Input id={emailId} className="peer pe-9" placeholder="Email" type="email" />
+              <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 peer-disabled:opacity-50">
+                <Mail size={16} aria-hidden="true" />
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <Label className="text-sm ml-0.5" htmlFor="password-sign-in">Password</Label>
-              <Input id="password-sign-in" type="password" />
+            <div className="relative">
+              <Label htmlFor={passwordId} className="sr-only">Password</Label>
+              <Input
+                id={passwordId}
+                className="pe-9"
+                placeholder="Password"
+                type={isPasswordVisible ? "text" : "password"}
+              />
+              <button
+                className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                type="button"
+                onClick={() => setIsPasswordVisible((v) => !v)}
+                aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                aria-pressed={isPasswordVisible}
+                aria-controls={passwordId}
+              >
+                {isPasswordVisible ? (
+                  <EyeOff size={16} aria-hidden="true" />
+                ) : (
+                  <Eye size={16} aria-hidden="true" />
+                )}
+              </button>
             </div>
 
             <Button className="w-full">Sign in</Button>

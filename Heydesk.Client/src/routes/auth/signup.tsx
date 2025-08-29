@@ -11,10 +11,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Google } from "@/components/icons";
-import { Mail } from "lucide-react";
+import { Mail, Eye, EyeOff, AtSign } from "lucide-react";
 
 export const Route = createFileRoute("/auth/signup")({
   component: RouteComponent,
@@ -22,6 +22,10 @@ export const Route = createFileRoute("/auth/signup")({
 
 function RouteComponent() {
   const [isFormVisible, setIsFormVisible] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const usernameId = useId();
+  const emailId = useId();
+  const passwordId = useId();
 
   const variants = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.2 } },
@@ -63,21 +67,47 @@ function RouteComponent() {
                   variants={variants}
                   className="flex flex-col gap-4"
                 >
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-sm ml-0.5" htmlFor="username-create-account">Username</Label>
-                    <Input id="username-create-account" type="text" />
+                  {/* Username */}
+                  <div className="relative">
+                    <Label htmlFor={usernameId} className="sr-only">Username</Label>
+                    <Input id={usernameId} placeholder="Username" className="peer pe-9" type="text" />
+                    <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 peer-disabled:opacity-50">
+                      <AtSign size={16} aria-hidden="true" />
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-sm ml-0.5" htmlFor="email-create-account">Email</Label>
+
+                  {/* Email */}
+                  <div className="relative">
+                    <Label htmlFor={emailId} className="sr-only">Email</Label>
+                    <Input id={emailId} placeholder="Email" className="peer pe-9" type="email" />
+                    <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 peer-disabled:opacity-50">
+                      <Mail size={16} aria-hidden="true" />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div className="relative">
+                    <Label htmlFor={passwordId} className="sr-only">Password</Label>
                     <Input
-                      id="email-create-account"
-                      type="email"
-                      placeholder="m@example.com"
+                      id={passwordId}
+                      className="pe-9"
+                      placeholder="Password"
+                      type={isPasswordVisible ? "text" : "password"}
                     />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-sm ml-0.5" htmlFor="password-create-account">Password</Label>
-                    <Input id="password-create-account" type="password" />
+                    <button
+                      className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                      type="button"
+                      onClick={() => setIsPasswordVisible((v) => !v)}
+                      aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                      aria-pressed={isPasswordVisible}
+                      aria-controls={passwordId}
+                    >
+                      {isPasswordVisible ? (
+                        <EyeOff size={16} aria-hidden="true" />
+                      ) : (
+                        <Eye size={16} aria-hidden="true" />
+                      )}
+                    </button>
                   </div>
 
                   <Button className="w-full">Create account</Button>
