@@ -22,8 +22,9 @@ export function Header() {
           <div className="flex items-center gap-x-5 md:gap-x-8">
             <Button
               className="h-9 px-5 py-2.5 rounded-md text-sm md:h-12 md:px-8 md:py-4 md:rounded-full sm:text-base"
+              asChild
             >
-              <span>Get started</span>
+              <Link to="/auth/signup"><span>Get started</span></Link>
             </Button>
           </div>
         </nav>

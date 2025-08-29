@@ -1,6 +1,7 @@
 import { Play } from "lucide-react";
 import { Container } from "../container";
 import { Button } from "../ui/button";
+import { Link } from "@tanstack/react-router";
 
 export function Hero() {
   return (
@@ -25,7 +26,9 @@ export function Hero() {
         understand context, and resolve tickets automatically.
       </p>
       <div className="mt-10 flex justify-center gap-x-4">
-        <Button size='xl'>Sign up</Button>
+        <Button size='xl' asChild>
+          <Link to="/auth/signup">Sign up</Link>
+        </Button>
         <Button
           variant="outline"
           size="xl"

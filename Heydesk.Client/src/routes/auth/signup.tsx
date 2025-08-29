@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Google } from "@/components/icons";
@@ -32,10 +32,12 @@ function RouteComponent() {
     <main className="h-screen w-full flex justify-center items-center">
       <div className="flex flex-col gap-8">
         <div className="flex gap-1 justify-center">
-          <Logo className="h-8 w-auto" />
-          <span className="text-2xl font-light tracking-wider">
-            Hey<span className="text-lime-500 font-base">desk</span>
-          </span>
+          <Link to="/" className="flex gap-1 items-center" aria-label="Home">
+            <Logo className="h-8 w-auto" />
+            <span className="text-2xl font-light tracking-wider">
+              Hey<span className="text-lime-500 font-base">desk</span>
+            </span>
+          </Link>
         </div>
 
         <Card className="min-w-sm">
@@ -129,7 +131,7 @@ function RouteComponent() {
             {!isFormVisible && (
               <p className="text-center text-sm w-full">
                 Already have an account?{" "}
-                <span className="underline">Sign in</span>
+                <Link to="/auth/signin" className="underline">Sign in</Link>
               </p>
             )}
           </CardFooter>
