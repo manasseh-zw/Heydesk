@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 
 export function Hero() {
   return (
-    <Container className="pb-16 pt-20 text-center lg:pt-32">
+    <Container className="pb-16 pt-20 text-center lg:pt-28">
       <h1 className="mx-auto max-w-4xl font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-8xl">
         Support{" "}
         <span className="relative whitespace-nowrap text-[#9AE600]">
@@ -21,14 +21,20 @@ export function Hero() {
         it makes you smile.
       </h1>
       <p className="mx-auto mt-6 max-w-2xl text-lg tracking-tight text-slate-700">
-        Transform your customer support with AI Agents that know your business, 
+        Transform your customer support with AI Agents that know your business,
         understand context, and resolve tickets automatically.
       </p>
       <div className="mt-10 flex justify-center gap-x-4">
-        <Button>Sign up</Button>
-        <Button variant="outline" onClick={() => window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank')}>
+        <Button size='xl'>Sign up</Button>
+        <Button
+          variant="outline"
+          size="xl"
+          onClick={() =>
+            window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ", "_blank")
+          }
+        >
           <Play fill="#9AE600" stroke="#9AE600" className="h-4 w-4" />
-          <span className="ml-2">See demo</span>
+          <span>See demo</span>
         </Button>
       </div>
     </Container>

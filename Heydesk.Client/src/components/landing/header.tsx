@@ -8,16 +8,22 @@ export function Header() {
       <Container>
         <nav className="relative z-50 flex justify-between">
           <div className="flex items-center md:gap-x-12">
-            <Link to="/" className="flex flex-row gap-2 align-bottom" aria-label="Home">
-              <Logo className="h-9 w-auto" />
-              <span className="text-2xl font-light">Hey<span className="text-lime-500 font-light">desk</span></span>
+            <Link
+              to="/"
+              className="flex flex-row gap-2 align-bottom"
+              aria-label="Home"
+            >
+              <Logo className="h-8 w-auto md:h-10" />
+              <span className="text-2xl md:text-3xl font-light">
+                Hey<span className="text-lime-500 font-light">desk</span>
+              </span>
             </Link>
           </div>
           <div className="flex items-center gap-x-5 md:gap-x-8">
-            <Button>
-              <span>
-                Get started <span className="hidden lg:inline">today</span>
-              </span>
+            <Button
+              className="h-9 px-5 py-2.5 rounded-md text-sm md:h-12 md:px-8 md:py-4 md:rounded-full sm:text-base"
+            >
+              <span>Get started</span>
             </Button>
           </div>
         </nav>
