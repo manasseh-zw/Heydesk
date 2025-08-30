@@ -34,7 +34,7 @@ function RouteComponent() {
 
   return (
     <main className="h-screen w-full flex justify-center items-center">
-      <div className="flex flex-col gap-8">
+      <div className={`flex flex-col gap-8 transition-[margin] duration-300 md:duration-500 ease-in-out ${!isFormVisible ? "-mt-8 md:-mt-16" : ""}`}>
         <div className="flex gap-1 justify-center">
           <Link to="/" className="flex gap-1 items-center" aria-label="Home">
             <Logo className="h-8 w-auto" />

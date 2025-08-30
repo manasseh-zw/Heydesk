@@ -9,11 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OrgRouteRouteImport } from './routes/$org/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
+import { Route as OrgIndexRouteImport } from './routes/$org/index'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/auth/signin'
 
+const OrgRouteRoute = OrgRouteRouteImport.update({
+  id: '/$org',
+  path: '/$org',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -23,6 +30,11 @@ const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
   id: '/onboarding/',
   path: '/onboarding/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const OrgIndexRoute = OrgIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OrgRouteRoute,
 } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
@@ -37,33 +49,52 @@ const AuthSigninRoute = AuthSigninRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$org': typeof OrgRouteRouteWithChildren
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/$org/': typeof OrgIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/$org': typeof OrgIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$org': typeof OrgRouteRouteWithChildren
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/$org/': typeof OrgIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth/signin' | '/auth/signup' | '/onboarding'
+  fullPaths:
+    | '/'
+    | '/$org'
+    | '/auth/signin'
+    | '/auth/signup'
+    | '/$org/'
+    | '/onboarding'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth/signin' | '/auth/signup' | '/onboarding'
-  id: '__root__' | '/' | '/auth/signin' | '/auth/signup' | '/onboarding/'
+  to: '/' | '/auth/signin' | '/auth/signup' | '/$org' | '/onboarding'
+  id:
+    | '__root__'
+    | '/'
+    | '/$org'
+    | '/auth/signin'
+    | '/auth/signup'
+    | '/$org/'
+    | '/onboarding/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  OrgRouteRoute: typeof OrgRouteRouteWithChildren
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
   OnboardingIndexRoute: typeof OnboardingIndexRoute
@@ -71,6 +102,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/$org': {
+      id: '/$org'
+      path: '/$org'
+      fullPath: '/$org'
+      preLoaderRoute: typeof OrgRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -84,6 +122,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/$org/': {
+      id: '/$org/'
+      path: '/'
+      fullPath: '/$org/'
+      preLoaderRoute: typeof OrgIndexRouteImport
+      parentRoute: typeof OrgRouteRoute
     }
     '/auth/signup': {
       id: '/auth/signup'
@@ -102,8 +147,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface OrgRouteRouteChildren {
+  OrgIndexRoute: typeof OrgIndexRoute
+}
+
+const OrgRouteRouteChildren: OrgRouteRouteChildren = {
+  OrgIndexRoute: OrgIndexRoute,
+}
+
+const OrgRouteRouteWithChildren = OrgRouteRoute._addFileChildren(
+  OrgRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  OrgRouteRoute: OrgRouteRouteWithChildren,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
   OnboardingIndexRoute: OnboardingIndexRoute,
