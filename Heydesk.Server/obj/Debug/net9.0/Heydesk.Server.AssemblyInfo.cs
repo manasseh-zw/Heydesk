@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Heydesk.Server")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+525c328734795d05fc74e37dee57c2032cd3dfac")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3eb2d08991e0dcb221fe8aa83b31f9a4e6552351")]
 [assembly: System.Reflection.AssemblyProductAttribute("Heydesk.Server")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Heydesk.Server")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

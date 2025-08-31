@@ -1,6 +1,0 @@
-@Heydesk.Server_HostAddress = http://localhost:5185
-
-GET {{Heydesk.Server_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
