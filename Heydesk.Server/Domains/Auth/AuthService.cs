@@ -13,7 +13,7 @@ namespace Heydesk.Server.Domains.Auth;
 public interface IAuthService
 {
     public Task<Result<AuthResponse>> EmailSignUp(EmailSignUpRequest request);
-    public Task<Result<AuthResponse>> SignIn(EmailSignInRequest request);
+    public Task<Result<AuthResponse>> EmailSignIn(EmailSignInRequest request);
     public Task<Result<AuthResponse>> GoogleAuth(GoogleAuthRequest request);
     public Task<Result<UserDataResponse>> GetUserData(Guid userId);
 }
@@ -182,7 +182,7 @@ public class AuthService : IAuthService
         return Result.Ok(response);
     }
 
-    public async Task<Result<AuthResponse>> SignIn(EmailSignInRequest request)
+    public async Task<Result<AuthResponse>> EmailSignIn(EmailSignInRequest request)
     {
         var validationResult = new SignInValidator().Validate(request);
         if (!validationResult.IsValid)
