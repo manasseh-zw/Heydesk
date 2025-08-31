@@ -7,18 +7,17 @@ public class AuthContracts
 {
     public record EmailSignUpRequest(string Username, string Email, string Password);
 
-    public record SignInRequest(string UserIdentifier, string Password);
+    public record EmailSignInRequest(string UserIdentifier, string Password);
 
-    public record GoogleSignUpRequest(string AccessToken);
+    public record GoogleAuthRequest(string AccessToken);
 
-    public record AuthResult(string Token, UserDataResponse UserData);
+    public record AuthResponse(string Token, UserDataResponse UserData);
 
     public record UserDataResponse(
         Guid Id,
         string Email,
         string? Username,
         string? AvatarUrl,
-        bool IsEmailConfirmed,
         DateTime CreatedAt,
         AuthProvider AuthProvider
     );

@@ -1,7 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Heydesk.Server.Data.Models;
 
 public class UserModel
 {
+    [Key]
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
