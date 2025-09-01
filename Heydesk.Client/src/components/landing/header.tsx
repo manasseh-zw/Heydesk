@@ -2,7 +2,11 @@ import { Button } from "../ui/button";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "../logo";
 import { Container } from "../container";
+import { useStore } from "@tanstack/react-store";
+import { authState } from "@/lib/state/auth.state";
 export function Header() {
+  const auth = useStore(authState);
+
   return (
     <header className="py-10">
       <Container>
@@ -24,7 +28,15 @@ export function Header() {
               className="h-9 px-5 py-2.5 rounded-md text-sm md:h-12 md:px-8 md:py-4 md:rounded-full sm:text-base"
               asChild
             >
-              <Link to="/auth/signup"><span>Get started</span></Link>
+              {auth.isAuthenticated ? (
+                <Link to="/$org" params={{ org: "pirollc" }}>
+                  <span>Dashboard</span>
+                </Link>
+              ) : (
+                <Link to="/auth/signup">
+                  <span>Get started</span>
+                </Link>
+              )}
             </Button>
           </div>
         </nav>

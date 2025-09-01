@@ -12,6 +12,7 @@ builder.Services.AddOpenApi();
 builder.Services.ConfigureDatabase();
 builder.Services.ConfigureAuthentication();
 builder.Services.AddAuthorization();
+builder.Services.AddControllers();
 
 builder.Services.AddSingleton<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
 builder.Services.AddScoped<ITokenManager, TokenManager>();
@@ -52,5 +53,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapControllers().RequireAuthorization();
+app.UseExceptionHandler(options => { });
 
 app.Run();

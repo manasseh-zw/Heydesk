@@ -62,7 +62,7 @@ public class AuthService : IAuthService
         await _repository.SaveChangesAsync();
 
         var token = _tokenManager.GenerateUserToken(user);
-        var userData = new UserDataResponse(
+    var userData = new UserDataResponse(
             user.Id,
             user.Email,
             user.Username,
