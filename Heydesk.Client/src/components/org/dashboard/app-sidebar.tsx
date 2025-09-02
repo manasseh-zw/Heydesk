@@ -1,6 +1,5 @@
 import * as React from "react";
 import {
-  ArrowUpCircleIcon,
   BarChartIcon,
   CameraIcon,
   ClipboardListIcon,
@@ -16,6 +15,9 @@ import {
   SettingsIcon,
   UsersIcon,
 } from "lucide-react";
+import { useStore } from "@tanstack/react-store";
+import { authState } from "@/lib/state/auth.state";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 import {
   Sidebar,
@@ -149,6 +151,18 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { organization } = useStore(authState);
+
+  // Generate avatar initials from organization name
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+  };
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -159,8 +173,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <a href="#">
-                <ArrowUpCircleIcon className="h-5 w-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <Avatar className="rounded-md">
+                  <AvatarFallback className="rounded-lg bg-[#636FFC] text-white">
+                    {organization ? getInitials(organization.name) : "OR"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-base font-semibold">
+                  {organization?.name || "Organization"}
+                </span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
