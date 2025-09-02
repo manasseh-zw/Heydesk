@@ -7,7 +7,6 @@ export const Route = createFileRoute("/$org")({
 function RouteComponent() {
   return (
     <main>
-      this is the layout for the organization route
       <Outlet />
     </main>
   );

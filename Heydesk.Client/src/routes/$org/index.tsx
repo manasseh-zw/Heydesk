@@ -1,4 +1,13 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
+import data from "./data.json";
+import { AppSidebar } from "@/components/org/dashboard/app-sidebar";
+import { ChartAreaInteractive } from "@/components/org/dashboard/chart-area-interactive";
+import { ChartBarMixed } from "@/components/org/dashboard/chart-bar-mixed";
+import { ChartPieDonut } from "@/components/org/dashboard/chart-pie-donut";
+import { DataTable } from "@/components/org/dashboard/data-table";
+import { SectionCards } from "@/components/org/dashboard/section-cards";
+import { SiteHeader } from "@/components/org/dashboard/site-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/$org/")({
   component: RouteComponent,
@@ -7,8 +16,30 @@ export const Route = createFileRoute("/$org/")({
 function RouteComponent() {
   const { org } = useParams({ from: "/$org" });
   return (
-    <main>
-      <p>this is {org}</p>
-    </main>
+    <SidebarProvider>
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              <SectionCards />
+              <div className="px-4 lg:px-6">
+                <ChartAreaInteractive />
+              </div>
+              <DataTable data={data} />
+              <div className="flex gap-4 px-4 lg:px-6">
+                <div className="basis-1/2">
+                  <ChartPieDonut />
+                </div>
+                <div className="basis-1/2">
+                  <ChartBarMixed />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
