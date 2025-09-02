@@ -26,7 +26,7 @@ export function Hero() {
         understand context, and resolve tickets automatically.
       </p>
       <div className="mt-10 flex justify-center gap-x-4">
-        <Button size='xl' asChild>
+        <Button size="xl" asChild>
           <Link to="/auth/signup">Sign up</Link>
         </Button>
         <Button

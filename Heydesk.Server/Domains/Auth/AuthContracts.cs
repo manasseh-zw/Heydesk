@@ -19,7 +19,8 @@ public class AuthContracts
         string? Username,
         string? AvatarUrl,
         DateTime CreatedAt,
-        AuthProvider AuthProvider
+        AuthProvider AuthProvider,
+        bool Onboarding
     );
 
     public class GoogleUserInfo

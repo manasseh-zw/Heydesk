@@ -62,13 +62,14 @@ public class AuthService : IAuthService
         await _repository.SaveChangesAsync();
 
         var token = _tokenManager.GenerateUserToken(user);
-    var userData = new UserDataResponse(
+        var userData = new UserDataResponse(
             user.Id,
             user.Email,
             user.Username,
             user.AvatarUrl,
             user.CreatedAt,
-            user.AuthProvider
+            user.AuthProvider,
+            user.Onboarding
         );
 
         return Result.Ok(new AuthResponse(token, userData));
@@ -125,7 +126,8 @@ public class AuthService : IAuthService
                     existingUser.Username,
                     existingUser.AvatarUrl,
                     existingUser.CreatedAt,
-                    existingUser.AuthProvider
+                    existingUser.AuthProvider,
+                    existingUser.Onboarding
                 );
 
                 return Result.Ok(new AuthResponse(token, userData));
@@ -150,9 +152,9 @@ public class AuthService : IAuthService
                 newUser.Username,
                 newUser.AvatarUrl,
                 newUser.CreatedAt,
-                newUser.AuthProvider
+                newUser.AuthProvider,
+                newUser.Onboarding
             );
-
             return Result.Ok(new AuthResponse(newToken, newUserData));
         }
         catch (Exception ex)
@@ -176,7 +178,8 @@ public class AuthService : IAuthService
             user.Username,
             user.AvatarUrl,
             user.CreatedAt,
-            user.AuthProvider
+            user.AuthProvider,
+            user.Onboarding
         );
 
         return Result.Ok(response);
@@ -216,7 +219,8 @@ public class AuthService : IAuthService
             user.Username,
             user.AvatarUrl,
             user.CreatedAt,
-            user.AuthProvider
+            user.AuthProvider,
+            user.Onboarding
         );
 
         return Result.Ok(new AuthResponse(token, userData));

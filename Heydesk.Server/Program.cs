@@ -1,6 +1,7 @@
 using Heydesk.Server.Config;
 using Heydesk.Server.Data.Models;
 using Heydesk.Server.Domains.Auth;
+using Heydesk.Server.Domains.Organization;
 using Heydesk.Server.Extensions;
 using Microsoft.AspNetCore.Identity;
 
@@ -17,6 +18,9 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
 builder.Services.AddScoped<ITokenManager, TokenManager>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Organization services
+builder.Services.AddScoped<IOrgService, OrgService>();
 
 builder.Services.AddSignalR();
 
