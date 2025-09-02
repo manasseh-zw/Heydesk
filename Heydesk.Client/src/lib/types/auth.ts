@@ -1,4 +1,7 @@
+import type { Organization } from "./organization"
+
 export type AuthProvider = "Email" | "Google"
+
 
 export type User = {
   id: string
@@ -7,6 +10,8 @@ export type User = {
   avatarUrl?: string
   createdAt: string
   authProvider: AuthProvider
+  onboarding: boolean
+  organization?: Organization
 }
 
 export type EmailSignUpRequest = {

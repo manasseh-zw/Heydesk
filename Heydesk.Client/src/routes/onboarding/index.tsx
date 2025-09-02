@@ -4,24 +4,75 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useId } from "react";
-import { Building2, AtSign } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useId, useState } from "react";
+import { Building2, AtSign, Globe } from "lucide-react";
+import { useForm } from "@tanstack/react-form";
+import { useMutation } from "@tanstack/react-query";
+import { createOrganization } from "@/lib/services/organization.service";
+import { authActions } from "@/lib/state/auth.state";
+import type { Organization } from "@/lib/types/organization";
+import ErrorAlert from "@/components/error-alert";
+import { Spinner } from "@/components/ui/shadcn-io/spinner";
+import { createOrgSchema } from "@/lib/validators/organization.validator";
 
 export const Route = createFileRoute("/onboarding/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const navigate = useNavigate();
   const nameId = useId();
   const slugId = useId();
   const websiteId = useId();
+  const [serverErrors, setServerErrors] = useState<string[]>([]);
+
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      slug: "",
+      url: "",
+    },
+    validators: {
+      onChange: createOrgSchema,
+    },
+    onSubmit: async ({ value }) => {
+      setServerErrors([]);
+      // Ensure URL has protocol
+      const formattedUrl = value.url.startsWith("http")
+        ? value.url
+        : `https://${value.url}`;
+
+      createOrgMutation.mutate({
+        ...value,
+        url: formattedUrl,
+      });
+    },
+  });
+
+  const createOrgMutation = useMutation({
+    mutationFn: (data: { name: string; slug: string; url: string }) =>
+      createOrganization(data),
+    onSuccess: (organization: Organization) => {
+      authActions.setOrganization(organization);
+      navigate({
+        to: "/$org",
+        params: { org: organization.slug },
+      });
+    },
+    onError: (error: Error & { errors?: string[] }) => {
+      if (error.errors && Array.isArray(error.errors)) {
+        setServerErrors(error.errors);
+      } else {
+        setServerErrors([error.message || "An unexpected error occurred"]);
+      }
+    },
+  });
 
   return (
     <main className="h-screen w-full flex justify-center items-center">
@@ -43,61 +94,144 @@ function RouteComponent() {
             <CardDescription>
               Set up your workspace to get started
             </CardDescription>
+            {serverErrors.length > 0 && (
+              <CardDescription className="mt-3">
+                <ErrorAlert errors={serverErrors} />
+              </CardDescription>
+            )}
           </CardHeader>
 
-          <CardContent className="flex flex-col gap-4">
-            {/* Organization Name */}
-            <div className="relative">
-              <Label htmlFor={nameId} className="sr-only">
-                Organization name
-              </Label>
-              <Input
-                id={nameId}
-                className="peer pe-9"
-                placeholder="Organization name"
-                type="text"
-              />
-              <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 peer-disabled:opacity-50">
-                <Building2 size={16} aria-hidden="true" />
+          <CardContent>
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                form.handleSubmit();
+              }}
+            >
+              {/* Organization Name */}
+              <div className="space-y-2">
+                <Label htmlFor={nameId} className="sr-only">
+                  Organization name
+                </Label>
+                <form.Field name="name">
+                  {(field) => (
+                    <>
+                      <Input
+                        id={nameId}
+                        placeholder="Organization name"
+                        type="text"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        disabled={createOrgMutation.isPending}
+                        endContent={<Building2 size={16} aria-hidden="true" />}
+                      />
+                      {!field.state.meta.isValid &&
+                        field.state.meta.isTouched && (
+                          <p
+                            className="text-destructive text-xs ml-4"
+                            role="alert"
+                            aria-live="polite"
+                          >
+                            {field.state.meta.errors
+                              .map((error) => error!.message)
+                              .join(", ")}
+                          </p>
+                        )}
+                    </>
+                  )}
+                </form.Field>
               </div>
-            </div>
 
-            {/* Slug */}
-            <div className="relative">
-              <Label htmlFor={slugId} className="sr-only">
-                Slug
-              </Label>
-              <Input
-                id={slugId}
-                className="peer pe-9"
-                placeholder="your-company"
-                type="text"
-              />
-              <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 peer-disabled:opacity-50">
-                <AtSign size={16} aria-hidden="true" />
+              {/* Slug */}
+              <div className="space-y-2">
+                <Label htmlFor={slugId} className="sr-only">
+                  Organization slug
+                </Label>
+                <form.Field name="slug">
+                  {(field) => (
+                    <>
+                      <Input
+                        id={slugId}
+                        placeholder="your-company"
+                        type="text"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        disabled={createOrgMutation.isPending}
+                        endContent={<AtSign size={16} aria-hidden="true" />}
+                      />
+                      {!field.state.meta.isValid &&
+                        field.state.meta.isTouched && (
+                          <p
+                            className="text-destructive text-xs ml-4"
+                            role="alert"
+                            aria-live="polite"
+                          >
+                            {field.state.meta.errors
+                              .map((error) => error!.message)
+                              .join(", ")}
+                          </p>
+                        )}
+                    </>
+                  )}
+                </form.Field>
               </div>
-            </div>
 
-            {/* Website with start inline add-on */}
-            <div className="relative">
-              <Label htmlFor={websiteId} className="sr-only">
-                Website
-              </Label>
-              <Input
-                id={websiteId}
-                className="peer ps-16"
-                placeholder="your-website.com"
-                type="text"
-              />
-              <span className="text-muted-foreground pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-sm peer-disabled:opacity-50">
-                https://
-              </span>
-            </div>
+              {/* Website URL */}
+              <div className="space-y-2">
+                <Label htmlFor={websiteId} className="sr-only">
+                  Website URL
+                </Label>
+                <form.Field name="url">
+                  {(field) => (
+                    <>
+                      <Input
+                        id={websiteId}
+                        placeholder="your-website.com"
+                        type="text"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        disabled={createOrgMutation.isPending}
+                        startContent={
+                          <span className="text-muted-foreground text-sm">
+                            https://
+                          </span>
+                        }
+                        endContent={<Globe size={16} aria-hidden="true" />}
+                      />
+                      {!field.state.meta.isValid &&
+                        field.state.meta.isTouched && (
+                          <p
+                            className="text-destructive text-xs ml-4"
+                            role="alert"
+                            aria-live="polite"
+                          >
+                            {field.state.meta.errors
+                              .map((error) => error!.message)
+                              .join(", ")}
+                          </p>
+                        )}
+                    </>
+                  )}
+                </form.Field>
+              </div>
+
+              <Button
+                className="w-full"
+                type="submit"
+                disabled={createOrgMutation.isPending || !form.state.canSubmit}
+              >
+                {createOrgMutation.isPending ? (
+                  <span>
+                    Creating organization <Spinner variant="ellipsis" />
+                  </span>
+                ) : (
+                  "Create organization"
+                )}
+              </Button>
+            </form>
           </CardContent>
-
-          <CardFooter>
-            <Button className="w-full">Continue</Button>
-          </CardFooter>
         </Card>
       </div>
     </main>

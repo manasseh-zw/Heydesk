@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Heydesk.Server.Data.Models;
+using Heydesk.Server.Domains.Organization;
 
 namespace Heydesk.Server.Domains.Auth;
 
@@ -20,7 +21,8 @@ public class AuthContracts
         string? AvatarUrl,
         DateTime CreatedAt,
         AuthProvider AuthProvider,
-        bool Onboarding
+        bool Onboarding,
+        GetOrgResponse? Organization
     );
 
     public class GoogleUserInfo

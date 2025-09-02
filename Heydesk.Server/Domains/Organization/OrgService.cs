@@ -52,6 +52,7 @@ public class OrgService : IOrgService
         };
 
         user.OrganizationId = organization.Id;
+        user.Onboarding = false;
 
         _repository.Organizations.Add(organization);
 
