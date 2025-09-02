@@ -44,6 +44,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("google-auth")]
+    [AllowAnonymous]
     public async Task<IActionResult> GoogleAuth([FromBody] GoogleAuthRequest request)
     {
         var result = await _authService.GoogleAuth(request);
