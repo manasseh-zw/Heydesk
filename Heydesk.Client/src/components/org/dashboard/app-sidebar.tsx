@@ -151,7 +151,7 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { organization } = useStore(authState);
+  const { user, organization } = useStore(authState);
 
   // Generate avatar initials from organization name
   const getInitials = (name: string) => {
@@ -192,7 +192,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={
+            user
+              ? {
+                  name: user.username || "User",
+                  email: user.email,
+                  avatar: user.avatarUrl || "/avatars/default.jpg",
+                }
+              : data.user
+          }
+        />
       </SidebarFooter>
     </Sidebar>
   );

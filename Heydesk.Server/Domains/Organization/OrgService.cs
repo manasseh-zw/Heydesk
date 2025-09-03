@@ -8,11 +8,8 @@ namespace Heydesk.Server.Domains.Organization;
 
 public interface IOrgService
 {
-    public Task<Result<GetOrgResponse>> CreateOrganization(Guid UserId, CreateOrgRequest request);
-    public Task<Result<GetMembersResponse>> GetMembers(
-        Guid OrganizationId,
-        GetMembersRequest request
-    );
+    Task<Result<GetOrgResponse>> CreateOrganization(Guid UserId, CreateOrgRequest request);
+    Task<Result<GetMembersResponse>> GetMembers(Guid OrganizationId, GetMembersRequest request);
 }
 
 public class OrgService : IOrgService
@@ -24,14 +21,18 @@ public class OrgService : IOrgService
         _repository = repository;
     }
 
-    public async Task<Result<GetOrgResponse>> CreateOrganization(Guid userId, CreateOrgRequest request)
+    public async Task<Result<GetOrgResponse>> CreateOrganization(
+        Guid userId,
+        CreateOrgRequest request
+    )
     {
         var validationResult = new CreateOrgValidator().Validate(request);
         if (!validationResult.IsValid)
             return Result.Fail([.. validationResult.Errors.Select(e => e.ErrorMessage)]);
 
-        var slugExists = await _repository.Organizations
-            .AnyAsync(o => o.Slug.Equals(request.Slug, StringComparison.CurrentCultureIgnoreCase));
+        var slugExists = await _repository.Organizations.AnyAsync(o =>
+            o.Slug.ToLower() == request.Slug.ToLower()
+        );
 
         if (slugExists)
             return Result.Fail("Organization slug already exists");
@@ -40,7 +41,6 @@ public class OrgService : IOrgService
         if (user == null)
             return Result.Fail("User not found");
 
-
         var organization = new OrganizationModel
         {
             Id = Guid.NewGuid(),
@@ -48,14 +48,13 @@ public class OrgService : IOrgService
             Slug = request.Slug.ToLower(),
             Url = request.Url,
             IconUrl = "",
-            Members = [user]
+            Members = [user],
         };
 
         user.OrganizationId = organization.Id;
         user.Onboarding = false;
 
         _repository.Organizations.Add(organization);
-
 
         await _repository.SaveChangesAsync();
 
@@ -72,20 +71,27 @@ public class OrgService : IOrgService
 
     public async Task<Result<GetMembersResponse>> GetMembers(
         Guid organizationId,
-        GetMembersRequest request)
+        GetMembersRequest request
+    )
     {
-        var organization = await _repository.Organizations
-            .Include(o => o.Members)
+        var organization = await _repository
+            .Organizations.Include(o => o.Members)
             .FirstOrDefaultAsync(o => o.Id == organizationId);
 
         if (organization == null)
             return Result.Fail("Organization not found");
 
         var totalCount = organization.Members.Count;
-        var members = organization.Members
-            .Skip((request.Page - 1) * request.PageSize)
+        var members = organization
+            .Members.Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(m => new GetUserResponse(m.Id, m.Username, m.Email, m.AvatarUrl ?? "", m.Onboarding))
+            .Select(m => new GetUserResponse(
+                m.Id,
+                m.Username,
+                m.Email,
+                m.AvatarUrl ?? "",
+                m.Onboarding
+            ))
             .ToList();
 
         var response = new GetMembersResponse(members, totalCount);

@@ -12,4 +12,5 @@ public class RepositoryContext(DbContextOptions<RepositoryContext> options) : Db
 
     public DbSet<UserModel> Users { get; set; }
     public DbSet<OrganizationModel> Organizations { get; set; }
+    public DbSet<DocumentModel> Documents { get; set; }
 }

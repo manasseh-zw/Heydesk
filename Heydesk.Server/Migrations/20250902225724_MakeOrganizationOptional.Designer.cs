@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Heydesk.Server.Migrations
 {
     [DbContext(typeof(RepositoryContext))]
-    [Migration("20250901202617_init")]
-    partial class init
+    [Migration("20250902225724_MakeOrganizationOptional")]
+    partial class MakeOrganizationOptional
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,33 @@ namespace Heydesk.Server.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+
+            modelBuilder.Entity("Heydesk.Server.Data.Models.OrganizationModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("IconUrl")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Organizations");
+                });
 
             modelBuilder.Entity("Heydesk.Server.Data.Models.UserModel", b =>
                 {
@@ -47,6 +74,12 @@ namespace Heydesk.Server.Migrations
                     b.Property<string>("GoogleId")
                         .HasColumnType("longtext");
 
+                    b.Property<bool>("Onboarding")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("char(36)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -57,7 +90,23 @@ namespace Heydesk.Server.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OrganizationId");
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Heydesk.Server.Data.Models.UserModel", b =>
+                {
+                    b.HasOne("Heydesk.Server.Data.Models.OrganizationModel", "Organization")
+                        .WithMany("Members")
+                        .HasForeignKey("OrganizationId");
+
+                    b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("Heydesk.Server.Data.Models.OrganizationModel", b =>
+                {
+                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }

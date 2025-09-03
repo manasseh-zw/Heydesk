@@ -13,10 +13,10 @@ namespace Heydesk.Server.Domains.Auth;
 
 public interface IAuthService
 {
-    public Task<Result<AuthResponse>> EmailSignUp(EmailSignUpRequest request);
-    public Task<Result<AuthResponse>> EmailSignIn(EmailSignInRequest request);
-    public Task<Result<AuthResponse>> GoogleAuth(GoogleAuthRequest request);
-    public Task<Result<UserDataResponse>> GetUserData(Guid userId);
+    Task<Result<AuthResponse>> EmailSignUp(EmailSignUpRequest request);
+    Task<Result<AuthResponse>> EmailSignIn(EmailSignInRequest request);
+    Task<Result<AuthResponse>> GoogleAuth(GoogleAuthRequest request);
+    Task<Result<UserDataResponse>> GetUserData(Guid userId);
 }
 
 public class AuthService : IAuthService
@@ -109,8 +109,8 @@ public class AuthService : IAuthService
                 return Result.Fail("Invalid user data received from Google");
             }
 
-            var existingUser = await _repository.Users
-                .Include(u => u.Organization)
+            var existingUser = await _repository
+                .Users.Include(u => u.Organization)
                 .FirstOrDefaultAsync(u => u.Email == googleUser.Email);
 
             if (existingUser != null)
@@ -122,15 +122,16 @@ public class AuthService : IAuthService
                 }
 
                 var token = _tokenManager.GenerateUserToken(existingUser);
-                var orgResponse = existingUser.Organization != null
-                    ? new GetOrgResponse(
-                        existingUser.Organization.Id,
-                        existingUser.Organization.Name,
-                        existingUser.Organization.Slug,
-                        existingUser.Organization.Url,
-                        existingUser.Organization.IconUrl
-                    )
-                    : null;
+                var orgResponse =
+                    existingUser.Organization != null
+                        ? new GetOrgResponse(
+                            existingUser.Organization.Id,
+                            existingUser.Organization.Name,
+                            existingUser.Organization.Slug,
+                            existingUser.Organization.Url,
+                            existingUser.Organization.IconUrl
+                        )
+                        : null;
 
                 var userData = new UserDataResponse(
                     existingUser.Id,
@@ -179,8 +180,8 @@ public class AuthService : IAuthService
 
     public async Task<Result<UserDataResponse>> GetUserData(Guid userId)
     {
-        var user = await _repository.Users
-            .Include(u => u.Organization)
+        var user = await _repository
+            .Users.Include(u => u.Organization)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user == null)
@@ -188,15 +189,16 @@ public class AuthService : IAuthService
             return Result.Fail("User not found");
         }
 
-        var orgResponse = user.Organization != null
-            ? new GetOrgResponse(
-                user.Organization.Id,
-                user.Organization.Name,
-                user.Organization.Slug,
-                user.Organization.Url,
-                user.Organization.IconUrl
-            )
-            : null;
+        var orgResponse =
+            user.Organization != null
+                ? new GetOrgResponse(
+                    user.Organization.Id,
+                    user.Organization.Name,
+                    user.Organization.Slug,
+                    user.Organization.Url,
+                    user.Organization.IconUrl
+                )
+                : null;
 
         var response = new UserDataResponse(
             user.Id,
@@ -219,8 +221,8 @@ public class AuthService : IAuthService
             return Result.Fail([.. validationResult.Errors.Select(e => e.ErrorMessage)]);
 
         // Check if the identifier is an email or username
-        var user = await _repository.Users
-            .Include(u => u.Organization)
+        var user = await _repository
+            .Users.Include(u => u.Organization)
             .FirstOrDefaultAsync(u =>
                 u.Email == request.UserIdentifier || u.Username == request.UserIdentifier
             );
@@ -243,15 +245,16 @@ public class AuthService : IAuthService
 
         var token = _tokenManager.GenerateUserToken(user);
 
-        var orgResponse = user.Organization != null
-            ? new GetOrgResponse(
-                user.Organization.Id,
-                user.Organization.Name,
-                user.Organization.Slug,
-                user.Organization.Url,
-                user.Organization.IconUrl
-            )
-            : null;
+        var orgResponse =
+            user.Organization != null
+                ? new GetOrgResponse(
+                    user.Organization.Id,
+                    user.Organization.Name,
+                    user.Organization.Slug,
+                    user.Organization.Url,
+                    user.Organization.IconUrl
+                )
+                : null;
 
         var userData = new UserDataResponse(
             user.Id,

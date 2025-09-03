@@ -13,10 +13,10 @@ public class UserModel
     public string? GoogleId { get; set; }
     public string? AvatarUrl { get; set; }
     public AuthProvider AuthProvider { get; set; }
-    public bool Onboarding { get; set; } = false;
+    public bool Onboarding { get; set; } = true;
 
-    public Guid OrganizationId { get; set; }
-    public OrganizationModel Organization { get; set; }
+    public Guid? OrganizationId { get; set; }
+    public OrganizationModel? Organization { get; set; }
 }
 
 public enum AuthProvider

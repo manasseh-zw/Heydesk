@@ -9,7 +9,7 @@ export const Route = createFileRoute("/$org")({
 
 function RouteComponent() {
   return (
-    <SidebarProvider>
+    <SidebarProvider className="bg-sidebar">
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />

@@ -20,6 +20,7 @@ import type { Organization } from "@/lib/types/organization";
 import ErrorAlert from "@/components/error-alert";
 import { Spinner } from "@/components/ui/shadcn-io/spinner";
 import { createOrgSchema } from "@/lib/validators/organization.validator";
+import normalizeUrl from "normalize-url";
 
 export const Route = createFileRoute("/onboarding/")({
   component: RouteComponent,
@@ -43,14 +44,21 @@ function RouteComponent() {
     },
     onSubmit: async ({ value }) => {
       setServerErrors([]);
-      // Ensure URL has protocol
-      const formattedUrl = value.url.startsWith("http")
-        ? value.url
-        : `https://${value.url}`;
+      // Normalize URL for submission
+      let normalizedUrl = value.url;
+      try {
+        normalizedUrl = normalizeUrl(value.url, {
+          defaultProtocol: "https",
+          forceHttps: true,
+        });
+      } catch {
+        // If normalization fails, let server handle the error
+        normalizedUrl = value.url;
+      }
 
       createOrgMutation.mutate({
         ...value,
-        url: formattedUrl,
+        url: normalizedUrl,
       });
     },
   });
@@ -193,11 +201,6 @@ function RouteComponent() {
                         value={field.state.value}
                         onChange={(e) => field.handleChange(e.target.value)}
                         disabled={createOrgMutation.isPending}
-                        startContent={
-                          <span className="text-muted-foreground text-sm">
-                            https://
-                          </span>
-                        }
                         endContent={<Globe size={16} aria-hidden="true" />}
                       />
                       {!field.state.meta.isValid &&

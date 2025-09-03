@@ -10,5 +10,6 @@ export const createOrgSchema = z.object({
     .min(2, "org slug must be at least 2 characters")
     .max(50, "org slug must not exceed 50 characters"),
   url: z
-    .url("Please enter a valid URL")
+    .string()
+    .min(1, "Website URL is required")
 });

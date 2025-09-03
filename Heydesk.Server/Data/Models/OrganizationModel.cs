@@ -8,4 +8,5 @@ public class OrganizationModel
     public string Url { get; set; }
     public string IconUrl { get; set; }
     public List<UserModel> Members { get; set; }
+    public List<DocumentModel> Documents { get; set; }
 }
