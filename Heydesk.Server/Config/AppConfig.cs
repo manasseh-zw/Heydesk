@@ -47,6 +47,12 @@ public static class AppConfig
             Environment.GetEnvironmentVariable("JWT_AUDIENCE")
                 ?? throw new Exception("JWT audience is not set")
         );
+
+    public static ExaAI ExaAI { get; } =
+        new(
+            Environment.GetEnvironmentVariable("EXA_AI_APIKEY")
+                ?? throw new Exception("EXA AI APIKEY is not set")
+        );
 }
 
 public record Database(string LocalConnectionString, string CloudConnectionString);
@@ -56,3 +62,5 @@ public record Client(string Url);
 public record AzureAI(string Endpoint, string ApiKey);
 
 public record JwtOptions(string Secret, string Issuer, string Audience);
+
+public record ExaAI(string ApiKey);

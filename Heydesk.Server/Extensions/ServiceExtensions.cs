@@ -1,6 +1,10 @@
 using System.Text;
 using Heydesk.Server.Config;
 using Heydesk.Server.Data;
+using Heydesk.Server.Domains.Auth;
+using Heydesk.Server.Domains.Document;
+using Heydesk.Server.Domains.Document.Workflows;
+using Heydesk.Server.Domains.Organization;
 using Heydesk.Server.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +68,39 @@ public static class ServiceExtensions
                 }
             );
 
+        return services;
+    }
+
+    public static IServiceCollection ConfigureDomainServices(this IServiceCollection services)
+    {
+        // Auth services
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ITokenManager, TokenManager>();
+
+        // Organization services
+        services.AddScoped<IOrgService, OrgService>();
+
+        // Document services
+        services.AddScoped<IDocumentService, DocumentService>();
+        services.AddScoped<IDocumentIngestionOrchestrator, DocumentIngestionOrchestrator>();
+
+        // Document processors
+        services.AddScoped<IDocumentProcessor<IngestUrlRequest>, UrlProcessor>();
+        services.AddScoped<IDocumentProcessor<IngestDocumentRequest>, PdfProcessor>();
+        services.AddScoped<IDocumentProcessor<IngestTextRequest>, TextProcessor>();
+
+        // Vector store service
+        services.AddScoped<IVectorStoreService, TiDBVectorStoreService>();
+
+        // HTTP client for external API calls (Exa)
+        services.AddHttpClient();
+
+        return services;
+    }
+
+    public static IServiceCollection ConfigureSignalR(this IServiceCollection services)
+    {
+        services.AddSignalR();
         return services;
     }
 }

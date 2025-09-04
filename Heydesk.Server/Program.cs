@@ -1,7 +1,6 @@
 using Heydesk.Server.Config;
 using Heydesk.Server.Data.Models;
-using Heydesk.Server.Domains.Auth;
-using Heydesk.Server.Domains.Organization;
+using Heydesk.Server.Domains.Document.Workflows;
 using Heydesk.Server.Extensions;
 using Microsoft.AspNetCore.Identity;
 
@@ -16,13 +15,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
 builder.Services.AddSingleton<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
-builder.Services.AddScoped<ITokenManager, TokenManager>();
-builder.Services.AddScoped<IAuthService, AuthService>();
 
-// Organization services
-builder.Services.AddScoped<IOrgService, OrgService>();
-
-builder.Services.AddSignalR();
+// Configure all domain services
+builder.Services.ConfigureDomainServices();
+builder.Services.ConfigureSignalR();
 
 builder.Services.AddCors(options =>
 {
@@ -58,6 +54,10 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers().RequireAuthorization();
+
+// Map SignalR hub for real-time ingestion updates
+app.MapHub<IngestionHub>("/hubs/ingestion");
+
 app.UseExceptionHandler(options => { });
 
 app.Run();
