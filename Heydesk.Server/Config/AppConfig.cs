@@ -53,6 +53,10 @@ public static class AppConfig
             Environment.GetEnvironmentVariable("EXA_AI_APIKEY")
                 ?? throw new Exception("EXA AI APIKEY is not set")
         );
+
+    public static string TiDBConnectionString { get; } =
+        Environment.GetEnvironmentVariable("TIDB_CONN_STRING")
+        ?? throw new Exception("TiDB Vector Connection string is not set");
 }
 
 public record Database(string LocalConnectionString, string CloudConnectionString);

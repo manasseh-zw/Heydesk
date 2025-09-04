@@ -1,4 +1,0 @@
-
-namespace Heydesk.Server.Integrations;
-
-
