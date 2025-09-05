@@ -22,7 +22,7 @@ export function NavMain({
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarMenu>
+        {/* <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2">
             <SidebarMenuButton
               tooltip="Quick Create"
@@ -32,13 +32,16 @@ export function NavMain({
               <span>Quick Create</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-        </SidebarMenu>
+        </SidebarMenu> */}
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
+              <SidebarMenuButton
+                tooltip={item.title}
+                className="h-10 px-3 gap-3 text-[15px]"
+              >
+                {item.icon && <item.icon className="h-5 w-5" />}
+                <span className="leading-none">{item.title}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}

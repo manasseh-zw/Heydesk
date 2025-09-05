@@ -16,8 +16,10 @@ import {
   UsersIcon,
 } from "lucide-react";
 import { useStore } from "@tanstack/react-store";
-import { authState } from "@/lib/state/auth.state";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Link } from "@tanstack/react-router";
+import { authActions, authState } from "@/lib/state/auth.state";
+import { Logo } from "@/components/logo";
+import TeamSwitcher from "@/components/team-switcher";
 
 import {
   Sidebar,
@@ -153,38 +155,29 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, organization } = useStore(authState);
 
-  // Generate avatar initials from organization name
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word.charAt(0))
-      .join("")
-      .substring(0, 2)
-      .toUpperCase();
-  };
-
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="px-1">
+        {/* Brand */}
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+            <Link
+              to="/"
+              className="flex items-center gap-2 px-2 py-2"
+              aria-label="Home"
             >
-              <a href="#">
-                <Avatar className="rounded-md">
-                  <AvatarFallback className="rounded-lg bg-[#636FFC] text-white">
-                    {organization ? getInitials(organization.name) : "OR"}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-base font-semibold">
-                  {organization?.name || "Organization"}
-                </span>
-              </a>
-            </SidebarMenuButton>
+              <Logo className="h-6 w-auto shrink-0" />
+              <span className="text-lg font-medium leading-none">
+                Hey<span className="text-lime-500 font-light">desk</span>
+              </span>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
+        <TeamSwitcher
+          organizations={organization ? [organization] : []}
+          activeOrgId={organization?.id}
+          onSelectOrg={(org) => authActions.setOrganization(org)}
+        />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

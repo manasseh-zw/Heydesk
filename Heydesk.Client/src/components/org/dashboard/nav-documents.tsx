@@ -38,10 +38,10 @@ export function NavDocuments({
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild className="h-10 px-3 gap-3 text-[15px]">
               <a href={item.url}>
-                <item.icon />
-                <span>{item.name}</span>
+                <item.icon className="h-5 w-5" />
+                <span className="leading-none">{item.name}</span>
               </a>
             </SidebarMenuButton>
             <DropdownMenu>
@@ -72,9 +72,9 @@ export function NavDocuments({
           </SidebarMenuItem>
         ))}
         <SidebarMenuItem>
-          <SidebarMenuButton className="text-sidebar-foreground/70">
-            <MoreHorizontalIcon className="text-sidebar-foreground/70" />
-            <span>More</span>
+          <SidebarMenuButton className="h-10 px-3 gap-3 text-[15px] text-sidebar-foreground/70">
+            <MoreHorizontalIcon className="h-5 w-5 text-sidebar-foreground/70" />
+            <span className="leading-none">More</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

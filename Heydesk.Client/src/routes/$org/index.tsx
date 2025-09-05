@@ -17,7 +17,7 @@ function RouteComponent() {
       <div className="px-4 lg:px-6">
         <ChartAreaInteractive />
       </div>
-      <DataTable data={data} />
+      {/* <DataTable data={data} /> */}
       <div className="flex gap-4 px-4 lg:px-6">
         <div className="basis-1/2">
           <ChartPieDonut />
