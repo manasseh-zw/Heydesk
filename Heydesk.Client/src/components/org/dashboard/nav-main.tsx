@@ -1,6 +1,7 @@
 "use client";
 
 import { PlusCircleIcon, type LucideIcon } from "lucide-react";
+import { Link, useLocation } from "@tanstack/react-router";
 
 import {
   SidebarGroup,
@@ -19,29 +20,31 @@ export function NavMain({
     icon?: LucideIcon;
   }[];
 }) {
+  const location = useLocation();
+  const normalize = (p: string) =>
+    p.endsWith("/") && p !== "/" ? p.slice(0, -1) : p;
+  const currentPath = normalize(location.pathname);
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
-        {/* <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-2">
-            <SidebarMenuButton
-              tooltip="Quick Create"
-              className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
-            >
-              <PlusCircleIcon />
-              <span>Quick Create</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu> */}
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
+                asChild
                 tooltip={item.title}
-                className="h-10 px-3 gap-3 text-[15px]"
+                className="h-10 px-3 gap-2 text-[15px]"
+                isActive={
+                  item.title === "Home"
+                    ? normalize(item.url) === currentPath
+                    : currentPath === normalize(item.url) ||
+                      currentPath.startsWith(normalize(item.url) + "/")
+                }
               >
-                {item.icon && <item.icon className="h-5 w-5" />}
-                <span className="leading-none">{item.title}</span>
+                <Link to={item.url}>
+                  {item.icon && <item.icon className="h-5 w-5" />}
+                  <span className="leading-normal">{item.title}</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}

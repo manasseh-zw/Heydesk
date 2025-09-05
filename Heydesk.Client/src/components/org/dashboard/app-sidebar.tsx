@@ -30,7 +30,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { NavDocuments } from "./nav-documents";
 import { NavMain } from "./nav-main";
 import { NavSecondary } from "./nav-secondary";
 import { NavUser } from "./nav-user";
@@ -42,79 +41,11 @@ const data = {
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: LayoutDashboardIcon,
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: ListIcon,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: BarChartIcon,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: FolderIcon,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: UsersIcon,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: CameraIcon,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: FileTextIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: FileCodeIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
+    { title: "Home", url: "/", icon: LayoutDashboardIcon },
+    { title: "Tickets", url: "/tickets", icon: ClipboardListIcon },
+    { title: "Agents", url: "/agents", icon: UsersIcon },
+    { title: "Knowledge Base", url: "/knowledgebase", icon: FileTextIcon },
+    { title: "Analytics", url: "/analytics", icon: BarChartIcon },
   ],
   navSecondary: [
     {
@@ -133,27 +64,22 @@ const data = {
       icon: SearchIcon,
     },
   ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: DatabaseIcon,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: ClipboardListIcon,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: FileIcon,
-    },
-  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, organization } = useStore(authState);
+  const basePath = organization?.slug ? `/${organization.slug}` : "/";
+  const navItems = [
+    { title: "Home", url: basePath, icon: LayoutDashboardIcon },
+    { title: "Tickets", url: `${basePath}/tickets`, icon: ClipboardListIcon },
+    { title: "Agents", url: `${basePath}/agents`, icon: UsersIcon },
+    {
+      title: "Knowledge Base",
+      url: `${basePath}/knowledgebase`,
+      icon: FileTextIcon,
+    },
+    { title: "Analytics", url: `${basePath}/analytics`, icon: BarChartIcon },
+  ];
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -162,7 +88,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <Link
-              to="/"
+              to={basePath}
               className="flex items-center gap-2 px-2 py-2"
               aria-label="Home"
             >
@@ -180,8 +106,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
+        <NavMain items={navItems} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
