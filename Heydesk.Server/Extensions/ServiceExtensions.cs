@@ -4,6 +4,8 @@ using Heydesk.Server.Data;
 using Heydesk.Server.Domains.Auth;
 using Heydesk.Server.Domains.Document;
 using Heydesk.Server.Domains.Document.Workflows;
+using Heydesk.Server.Domains.Document.Processors;
+using Heydesk.Server.Integrations;
 using Heydesk.Server.Domains.Organization;
 using Heydesk.Server.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -82,25 +84,27 @@ public static class ServiceExtensions
 
         // Document services
         services.AddScoped<IDocumentService, DocumentService>();
-        services.AddScoped<IDocumentIngestionOrchestrator, DocumentIngestionOrchestrator>();
+        services.AddSingleton<IDocumentIngestEventsQueue<DocumentIngestEvent>, DocumentIngestEventsQueue<DocumentIngestEvent>>();
+        services.AddHostedService<DocumentIngestProcessor>();
+        services.AddScoped<DocumentIngestEventHandler>();
+        services.AddSingleton<IIngestionSseBroker, IngestionSseBroker>();
 
         // Document processors
-        services.AddScoped<IDocumentProcessor<IngestUrlRequest>, UrlProcessor>();
-        services.AddScoped<IDocumentProcessor<IngestDocumentRequest>, PdfProcessor>();
-        services.AddScoped<IDocumentProcessor<IngestTextRequest>, TextProcessor>();
+        services.AddScoped<IUrlProcessor, UrlProcessor>();
+        services.AddScoped<IDocProcessor, DocProcessor>();
 
         // Vector store service
-        services.AddScoped<IVectorStoreService, TiDBVectorStoreService>();
+        services.AddScoped<IVectorStore, VectorStore>();
 
         // HTTP client for external API calls (Exa)
-        services.AddHttpClient();
+        services.AddHttpClient<IExaWebScraper, ExaWebScraper>();
 
         return services;
     }
 
     public static IServiceCollection ConfigureSignalR(this IServiceCollection services)
     {
-        services.AddSignalR();
+        // No SignalR; using SSE for ingestion notifications
         return services;
     }
 }

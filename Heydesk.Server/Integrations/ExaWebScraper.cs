@@ -91,20 +91,14 @@ public class ExtrasResult
 
 public class ContentsRequest
 {
-    public TextOptions? Text { get; set; }
+    public bool? Text { get; set; }
     public HighlightsOptions? Highlights { get; set; }
-    public bool? Summary { get; set; } = true;
+    public SummaryOptions? Summary { get; set; }
     public string? Livecrawl { get; set; }
     public int? LivecrawlTimeout { get; set; }
     public int? Subpages { get; set; }
-    public object? SubpageTarget { get; set; }
+    public string[]? SubpageTarget { get; set; }
     public ExtrasOptions? Extras { get; set; }
-}
-
-public class TextOptions
-{
-    public int? MaxCharacters { get; set; }
-    public bool IncludeHtmlTags { get; set; } = false;
 }
 
 public class HighlightsOptions
@@ -118,4 +112,9 @@ public class ExtrasOptions
 {
     public int Links { get; set; }
     public int ImageLinks { get; set; }
+}
+
+public class SummaryOptions
+{
+    public string Query { get; set; }
 }

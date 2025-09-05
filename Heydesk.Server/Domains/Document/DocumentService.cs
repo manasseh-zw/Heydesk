@@ -1,6 +1,8 @@
 using Heydesk.Server.Data;
 using Heydesk.Server.Utils;
 using Microsoft.EntityFrameworkCore;
+using Heydesk.Server.Data.Models;
+using Heydesk.Server.Domains.Document.Workflows;
 
 namespace Heydesk.Server.Domains.Document;
 
@@ -22,11 +24,17 @@ public class DocumentService : IDocumentService
 {
     private readonly RepositoryContext _repository;
     private readonly ILogger<DocumentService> _logger;
+    private readonly IDocumentIngestEventsQueue<DocumentIngestEvent> _ingestQueue;
 
-    public DocumentService(RepositoryContext repository, ILogger<DocumentService> logger)
+    public DocumentService(
+        RepositoryContext repository,
+        ILogger<DocumentService> logger,
+        IDocumentIngestEventsQueue<DocumentIngestEvent> ingestQueue
+    )
     {
         _repository = repository;
         _logger = logger;
+        _ingestQueue = ingestQueue;
     }
 
     public async Task<Result<GetDocumentsResponse>> GetDocuments(
@@ -50,6 +58,7 @@ public class DocumentService : IDocumentService
                     d.Name,
                     d.Type,
                     d.SourceUrl ?? string.Empty,
+                    d.Status,
                     d.Content
                 ))
                 .ToListAsync();
@@ -73,7 +82,71 @@ public class DocumentService : IDocumentService
         IngestDocumentRequest request
     )
     {
-        // return await _orchestrator.IngestDocumentAsync(docid, request);
+        try
+        {
+            // Validate PDF content (MIME, extension, magic header)
+            if (!string.Equals(request.File.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                return Result.Fail("Only PDF files are supported");
+            }
+            if (!Path.GetExtension(request.File.FileName).Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                return Result.Fail("Only .pdf files are supported");
+            }
+
+            var document = new DocumentModel
+            {
+                Id = Guid.CreateVersion7(),
+                Name = request.Name,
+                Type = DocumentType.Document,
+                OrganizationId = OrganizationId,
+                Status = DocumentIngestStatus.Pending,
+                SourceUrl = string.Empty,
+            };
+
+            _repository.Documents.Add(document);
+            await _repository.SaveChangesAsync();
+
+            byte[] bytes;
+            await using (var ms = new MemoryStream())
+            {
+                await request.File.CopyToAsync(ms);
+                bytes = ms.ToArray();
+            }
+
+            // Validate PDF magic header %PDF-
+            if (bytes.Length < 5 || bytes[0] != 0x25 || bytes[1] != 0x50 || bytes[2] != 0x44 || bytes[3] != 0x46 || bytes[4] != 0x2D)
+            {
+                return Result.Fail("Invalid PDF file");
+            }
+
+            await _ingestQueue.Writer.WriteAsync(
+                new DocumentIngestEvent(
+                    document.Id,
+                    OrganizationId,
+                    IngestEventType.Document,
+                    FileContent: bytes,
+                    FileName: request.File.FileName,
+                    ContentType: request.File.ContentType
+                )
+            );
+
+            return Result.Ok(
+                new GetDocumentResponse(
+                    document.Id,
+                    document.Name,
+                    document.Type,
+                    document.SourceUrl ?? string.Empty,
+                    document.Status,
+                    document.Content
+                )
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error queuing document ingestion for org {OrganizationId}", OrganizationId);
+            return Result.Fail("Failed to queue document ingestion");
+        }
     }
 
     public async Task<Result<GetDocumentResponse>> IngestUrl(
@@ -81,7 +154,46 @@ public class DocumentService : IDocumentService
         IngestUrlRequest request
     )
     {
-        // return await _orchestrator.IngestUrlAsync(docid, request);
+        try
+        {
+            var document = new DocumentModel
+            {
+                Id = Guid.CreateVersion7(),
+                Name = request.Url,
+                Type = DocumentType.Url,
+                OrganizationId = OrganizationId,
+                Status = DocumentIngestStatus.Pending,
+                SourceUrl = request.Url,
+            };
+
+            _repository.Documents.Add(document);
+            await _repository.SaveChangesAsync();
+
+            await _ingestQueue.Writer.WriteAsync(
+                new DocumentIngestEvent(
+                    document.Id,
+                    OrganizationId,
+                    IngestEventType.Url,
+                    Url: request.Url
+                )
+            );
+
+            return Result.Ok(
+                new GetDocumentResponse(
+                    document.Id,
+                    document.Name,
+                    document.Type,
+                    document.SourceUrl ?? string.Empty,
+                    document.Status,
+                    document.Content
+                )
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error queuing URL ingestion for org {OrganizationId}", OrganizationId);
+            return Result.Fail("Failed to queue URL ingestion");
+        }
     }
 
     public async Task<Result<GetDocumentResponse>> IngestText(
@@ -89,6 +201,45 @@ public class DocumentService : IDocumentService
         IngestTextRequest request
     )
     {
-        // return await _orchestrator.IngestTextAsync(docid, request);
+        try
+        {
+            var document = new DocumentModel
+            {
+                Id = Guid.CreateVersion7(),
+                Name = request.Name,
+                Type = DocumentType.Text,
+                OrganizationId = OrganizationId,
+                Status = DocumentIngestStatus.Pending,
+                SourceUrl = string.Empty,
+            };
+
+            _repository.Documents.Add(document);
+            await _repository.SaveChangesAsync();
+
+            await _ingestQueue.Writer.WriteAsync(
+                new DocumentIngestEvent(
+                    document.Id,
+                    OrganizationId,
+                    IngestEventType.Text,
+                    TextContent: request.Content
+                )
+            );
+
+            return Result.Ok(
+                new GetDocumentResponse(
+                    document.Id,
+                    document.Name,
+                    document.Type,
+                    document.SourceUrl ?? string.Empty,
+                    document.Status,
+                    document.Content
+                )
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error queuing text ingestion for org {OrganizationId}", OrganizationId);
+            return Result.Fail("Failed to queue text ingestion");
+        }
     }
 }

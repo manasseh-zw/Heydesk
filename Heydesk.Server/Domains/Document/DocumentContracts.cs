@@ -13,6 +13,7 @@ public record GetDocumentResponse(
     string Name,
     DocumentType Type,
     string SourceUrl,
+    DocumentIngestStatus Status,
     string? Content = null
 );
 

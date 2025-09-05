@@ -2,6 +2,24 @@ using System.Threading.Channels;
 
 namespace Heydesk.Server.Domains.Document.Workflows;
 
+public enum IngestEventType
+{
+    Url,
+    Document,
+    Text,
+}
+
+public record DocumentIngestEvent(
+    Guid DocumentId,
+    Guid OrganizationId,
+    IngestEventType Type,
+    string? Url = null,
+    string? TextContent = null,
+    byte[]? FileContent = null,
+    string? FileName = null,
+    string? ContentType = null
+);
+
 public interface IDocumentIngestEventsQueue<T>
 {
     ChannelReader<T> Reader { get; }

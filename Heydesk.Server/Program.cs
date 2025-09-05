@@ -18,7 +18,6 @@ builder.Services.AddSingleton<IPasswordHasher<UserModel>, PasswordHasher<UserMod
 
 // Configure all domain services
 builder.Services.ConfigureDomainServices();
-builder.Services.ConfigureSignalR();
 
 builder.Services.AddCors(options =>
 {
@@ -55,8 +54,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers().RequireAuthorization();
 
-// Map SignalR hub for real-time ingestion updates
-app.MapHub<IngestionHub>("/hubs/ingestion");
+// SSE endpoint is exposed via DocumentsController
 
 app.UseExceptionHandler(options => { });
 

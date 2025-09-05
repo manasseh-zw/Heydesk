@@ -10,6 +10,8 @@ public class DocumentModel
 
     public DocumentType Type { get; set; }
 
+    public DocumentIngestStatus Status { get; set; }
+
     public string? Content { get; set; }
 
     public Guid OrganizationId { get; set; }
@@ -21,4 +23,12 @@ public enum DocumentType
     Url,
     Document,
     Text,
+}
+
+public enum DocumentIngestStatus
+{
+    Pending,
+    Processing,
+    Completed,
+    Failed,
 }

@@ -2,18 +2,17 @@ using Heydesk.Server.Config;
 using TiDB.Vector.AzureOpenAI.Builder;
 using TiDB.Vector.Core;
 using TiDB.Vector.Models;
+using TiDB.Vector.Options;
 
 namespace Heydesk.Server.Data;
 
 public interface IVectorStore
 {
-    Task<List<SearchResult>> SearchAsync(
-        string orgId,
-        string query,
-        CancellationToken cancellationToken = default
-    );
+    Task<List<SearchResult>> SearchAsync(string orgId, string query);
+    Task<bool> UpsertAsync(Guid OrgId, string content, MimeType mimeType);
 }
 
+//TODO add colleciton and tag filtering... and change meta data to json string.
 public class VectorStore : IVectorStore
 {
     private readonly TiDBVectorStore _store;
@@ -30,14 +29,41 @@ public class VectorStore : IVectorStore
             .Build();
     }
 
-    public async Task<List<SearchResult>> SearchAsync(
-        string orgId,
-        string query,
-        CancellationToken cancellationToken = default
-    )
+    public async Task<List<SearchResult>> SearchAsync(string orgId, string query)
     {
         var result = await _store.SearchAsync(query, 5);
 
         return result.ToList();
     }
+
+    public async Task<bool> UpsertAsync(Guid OrgId, string content, MimeType mimeType)
+    {
+        var options = new UpsertOptions
+        {
+            UseChunking = true,
+            MaxTokensPerChunk = 600,
+            OverlapTokens = 80,
+            ChunkHeader = "",
+            StripHtml = true,
+        };
+        var record = new UpsertItem
+        {
+            Id = Guid.CreateVersion7().ToString(),
+            Collection = OrgId.ToString(),
+            Content = content,
+            ContentType = mimeType.Equals(MimeType.Markdown)
+                ? ContentType.Markdown
+                : ContentType.PlainText,
+        };
+
+        await _store.UpsertAsync(record, options);
+
+        return true;
+    }
+}
+
+public enum MimeType
+{
+    Markdown,
+    PlainText,
 }
