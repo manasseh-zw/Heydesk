@@ -15,9 +15,7 @@ public record DocumentIngestEvent(
     IngestEventType Type,
     string? Url = null,
     string? TextContent = null,
-    byte[]? FileContent = null,
-    string? FileName = null,
-    string? ContentType = null
+    byte[]? FileContent = null
 );
 
 public interface IDocumentIngestEventsQueue<T>

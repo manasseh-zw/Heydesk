@@ -1,7 +1,7 @@
+using System.Text.Json;
+using Heydesk.Server.Domains.Document.Workflows;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Runtime.CompilerServices;
-using Heydesk.Server.Domains.Document.Workflows;
 
 namespace Heydesk.Server.Domains.Document;
 
@@ -102,8 +102,7 @@ public class DocumentsController : ControllerBase
         await Response.StartAsync(ct);
         await foreach (var evt in _sseBroker.Subscribe(organizationId, ct))
         {
-            await Response.WriteAsync($"event: ingest\n", ct);
-            await Response.WriteAsync($"data: {{ \"documentId\": \"{evt.DocumentId}\", \"status\": \"{evt.Status}\" }}\n\n", ct);
+            await Response.WriteAsync(JsonSerializer.Serialize(evt), cancellationToken: ct);
             await Response.Body.FlushAsync(ct);
         }
     }

@@ -18,15 +18,19 @@ public class IngestionSseBroker : IIngestionSseBroker
 
     public IAsyncEnumerable<IngestionSseEvent> Subscribe(Guid organizationId, CancellationToken ct)
     {
-        var channel = _channels.GetOrAdd(organizationId, _ => Channel.CreateUnbounded<IngestionSseEvent>());
+        var channel = _channels.GetOrAdd(
+            organizationId,
+            _ => Channel.CreateUnbounded<IngestionSseEvent>()
+        );
         return channel.Reader.ReadAllAsync(ct);
     }
 
     public Task PublishAsync(IngestionSseEvent evt)
     {
-        var channel = _channels.GetOrAdd(evt.OrganizationId, _ => Channel.CreateUnbounded<IngestionSseEvent>());
+        var channel = _channels.GetOrAdd(
+            evt.OrganizationId,
+            _ => Channel.CreateUnbounded<IngestionSseEvent>()
+        );
         return channel.Writer.WriteAsync(evt).AsTask();
     }
 }
-
-

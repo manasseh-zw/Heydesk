@@ -1,8 +1,8 @@
 using Heydesk.Server.Data;
-using Heydesk.Server.Utils;
-using Microsoft.EntityFrameworkCore;
 using Heydesk.Server.Data.Models;
 using Heydesk.Server.Domains.Document.Workflows;
+using Heydesk.Server.Utils;
+using Microsoft.EntityFrameworkCore;
 
 namespace Heydesk.Server.Domains.Document;
 
@@ -85,11 +85,20 @@ public class DocumentService : IDocumentService
         try
         {
             // Validate PDF content (MIME, extension, magic header)
-            if (!string.Equals(request.File.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase))
+            if (
+                !string.Equals(
+                    request.File.ContentType,
+                    "application/pdf",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
             {
                 return Result.Fail("Only PDF files are supported");
             }
-            if (!Path.GetExtension(request.File.FileName).Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+            if (
+                !Path.GetExtension(request.File.FileName)
+                    .Equals(".pdf", StringComparison.OrdinalIgnoreCase)
+            )
             {
                 return Result.Fail("Only .pdf files are supported");
             }
@@ -115,7 +124,14 @@ public class DocumentService : IDocumentService
             }
 
             // Validate PDF magic header %PDF-
-            if (bytes.Length < 5 || bytes[0] != 0x25 || bytes[1] != 0x50 || bytes[2] != 0x44 || bytes[3] != 0x46 || bytes[4] != 0x2D)
+            if (
+                bytes.Length < 5
+                || bytes[0] != 0x25
+                || bytes[1] != 0x50
+                || bytes[2] != 0x44
+                || bytes[3] != 0x46
+                || bytes[4] != 0x2D
+            )
             {
                 return Result.Fail("Invalid PDF file");
             }
@@ -125,9 +141,7 @@ public class DocumentService : IDocumentService
                     document.Id,
                     OrganizationId,
                     IngestEventType.Document,
-                    FileContent: bytes,
-                    FileName: request.File.FileName,
-                    ContentType: request.File.ContentType
+                    FileContent: bytes
                 )
             );
 
@@ -144,7 +158,11 @@ public class DocumentService : IDocumentService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error queuing document ingestion for org {OrganizationId}", OrganizationId);
+            _logger.LogError(
+                ex,
+                "Error queuing document ingestion for org {OrganizationId}",
+                OrganizationId
+            );
             return Result.Fail("Failed to queue document ingestion");
         }
     }
@@ -191,7 +209,11 @@ public class DocumentService : IDocumentService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error queuing URL ingestion for org {OrganizationId}", OrganizationId);
+            _logger.LogError(
+                ex,
+                "Error queuing URL ingestion for org {OrganizationId}",
+                OrganizationId
+            );
             return Result.Fail("Failed to queue URL ingestion");
         }
     }
@@ -238,7 +260,11 @@ public class DocumentService : IDocumentService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error queuing text ingestion for org {OrganizationId}", OrganizationId);
+            _logger.LogError(
+                ex,
+                "Error queuing text ingestion for org {OrganizationId}",
+                OrganizationId
+            );
             return Result.Fail("Failed to queue text ingestion");
         }
     }

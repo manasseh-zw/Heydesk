@@ -1,6 +1,5 @@
-using System.Net.Http;
 using Heydesk.Server.Data.Models;
-using Microsoft.EntityFrameworkCore;
+using Heydesk.Server.Domains.Document.Processors;
 
 namespace Heydesk.Server.Domains.Document.Workflows;
 
@@ -8,16 +7,16 @@ public class DocumentIngestEventHandler
 {
     private readonly Data.RepositoryContext _repository;
     private readonly Data.IVectorStore _vectorStore;
-    private readonly Document.Processors.IUrlProcessor _urlProcessor;
-    private readonly Document.Processors.IDocProcessor _docProcessor;
+    private readonly IUrlProcessor _urlProcessor;
+    private readonly IDocProcessor _docProcessor;
     private readonly ILogger<DocumentIngestEventHandler> _logger;
     private readonly IIngestionSseBroker _sseBroker;
 
     public DocumentIngestEventHandler(
         Data.RepositoryContext repository,
         Data.IVectorStore vectorStore,
-        Document.Processors.IUrlProcessor urlProcessor,
-        Document.Processors.IDocProcessor docProcessor,
+        IUrlProcessor urlProcessor,
+        IDocProcessor docProcessor,
         ILogger<DocumentIngestEventHandler> logger,
         IIngestionSseBroker sseBroker
     )
@@ -35,7 +34,10 @@ public class DocumentIngestEventHandler
         var document = await _repository.Documents.FindAsync(ingestEvent.DocumentId);
         if (document is null)
         {
-            _logger.LogWarning("Document {DocumentId} not found for ingestion", ingestEvent.DocumentId);
+            _logger.LogWarning(
+                "Document {DocumentId} not found for ingestion",
+                ingestEvent.DocumentId
+            );
             return;
         }
 
@@ -54,24 +56,37 @@ public class DocumentIngestEventHandler
 
             if (!string.IsNullOrWhiteSpace(content))
             {
-                await _vectorStore.UpsertAsync(ingestEvent.OrganizationId, content, ingestEvent.Type == IngestEventType.Url ? Data.MimeType.Markdown : Data.MimeType.PlainText);
+                await _vectorStore.UpsertAsync(
+                    ingestEvent.OrganizationId,
+                    content,
+                    ingestEvent.Type == IngestEventType.Url
+                        ? Data.MimeType.Markdown
+                        : Data.MimeType.PlainText
+                );
                 document.Content = content;
             }
 
             document.Status = DocumentIngestStatus.Completed;
             await _repository.SaveChangesAsync(ct);
-            await _sseBroker.PublishAsync(new IngestionSseEvent(document.OrganizationId, document.Id, document.Status));
+            await _sseBroker.PublishAsync(
+                new IngestionSseEvent(document.OrganizationId, document.Id, document.Status)
+            );
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to ingest document {DocumentId}", ingestEvent.DocumentId);
             document.Status = DocumentIngestStatus.Failed;
             await _repository.SaveChangesAsync(ct);
-            await _sseBroker.PublishAsync(new IngestionSseEvent(document.OrganizationId, document.Id, document.Status));
+            await _sseBroker.PublishAsync(
+                new IngestionSseEvent(document.OrganizationId, document.Id, document.Status)
+            );
         }
     }
 
-    private async Task<string> ProcessUploadedFileAsync(DocumentIngestEvent ingestEvent, CancellationToken ct)
+    private async Task<string> ProcessUploadedFileAsync(
+        DocumentIngestEvent ingestEvent,
+        CancellationToken ct
+    )
     {
         if (ingestEvent.FileContent is null || ingestEvent.FileContent.Length == 0)
             return string.Empty;
