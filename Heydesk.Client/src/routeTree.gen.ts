@@ -15,6 +15,7 @@ import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as OrgIndexRouteImport } from './routes/$org/index'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/auth/signin'
+import { Route as OrgTicketsRouteImport } from './routes/$org/tickets'
 
 const OrgRouteRoute = OrgRouteRouteImport.update({
   id: '/$org',
@@ -46,10 +47,16 @@ const AuthSigninRoute = AuthSigninRouteImport.update({
   path: '/auth/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrgTicketsRoute = OrgTicketsRouteImport.update({
+  id: '/tickets',
+  path: '/tickets',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/$org/tickets': typeof OrgTicketsRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
   '/$org/': typeof OrgIndexRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$org/tickets': typeof OrgTicketsRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
   '/$org': typeof OrgIndexRoute
@@ -66,6 +74,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/$org/tickets': typeof OrgTicketsRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
   '/$org/': typeof OrgIndexRoute
@@ -76,16 +85,24 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$org'
+    | '/$org/tickets'
     | '/auth/signin'
     | '/auth/signup'
     | '/$org/'
     | '/onboarding'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth/signin' | '/auth/signup' | '/$org' | '/onboarding'
+  to:
+    | '/'
+    | '/$org/tickets'
+    | '/auth/signin'
+    | '/auth/signup'
+    | '/$org'
+    | '/onboarding'
   id:
     | '__root__'
     | '/'
     | '/$org'
+    | '/$org/tickets'
     | '/auth/signin'
     | '/auth/signup'
     | '/$org/'
@@ -144,14 +161,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSigninRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$org/tickets': {
+      id: '/$org/tickets'
+      path: '/tickets'
+      fullPath: '/$org/tickets'
+      preLoaderRoute: typeof OrgTicketsRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
   }
 }
 
 interface OrgRouteRouteChildren {
+  OrgTicketsRoute: typeof OrgTicketsRoute
   OrgIndexRoute: typeof OrgIndexRoute
 }
 
 const OrgRouteRouteChildren: OrgRouteRouteChildren = {
+  OrgTicketsRoute: OrgTicketsRoute,
   OrgIndexRoute: OrgIndexRoute,
 }
 

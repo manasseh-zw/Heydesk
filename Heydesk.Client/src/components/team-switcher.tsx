@@ -22,7 +22,7 @@ const Square = ({
   <span
     data-square
     className={cn(
-      "bg-muted text-muted-foreground flex size-5 items-center justify-center rounded text-xs font-medium",
+      "bg-muted text-muted-foreground flex size-6 items-center justify-center rounded text-[13px] font-medium",
       className
     )}
     aria-hidden="true"
@@ -53,7 +53,7 @@ export default function TeamSwitcher({
   const id = useId();
 
   return (
-    <div className="w-full *:not-first:mt-2">
+    <div className="w-full *:not-first:mt-2 mb-1">
       <Select
         value={activeOrgId}
         onValueChange={(value) => {
@@ -63,16 +63,19 @@ export default function TeamSwitcher({
       >
         <SelectTrigger
           id={id}
-          className="w-full [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_[data-square]]:shrink-0"
+          size="lg"
+          className="w-full text-[15px] [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_[data-square]]:shrink-0  border-1 bg-white/50 border-stone-200"
         >
           <SelectValue placeholder="Select organization" />
         </SelectTrigger>
-        <SelectContent className="[&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2 [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2">
+        <SelectContent className="text-[15px] [&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2 [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2">
           <SelectGroup>
-            <SelectLabel className="ps-2">Switch organization</SelectLabel>
+            <SelectLabel className="ps-2 text-xs">
+              only one org supported at the moment
+            </SelectLabel>
             {organizations.map((org) => (
               <SelectItem key={org.id} value={org.id}>
-                <Square className="bg-indigo-400/20 text-indigo-500">
+                <Square className="bg-indigo-500 text-white">
                   {getInitials(org.name)}
                 </Square>
                 <span className="truncate">{org.name}</span>

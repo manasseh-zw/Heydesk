@@ -93,7 +93,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               aria-label="Home"
             >
               <Logo className="h-6 w-auto shrink-0" />
-              <span className="text-lg font-medium leading-none">
+              <span className="text-lg font-light leading-none">
                 Hey<span className="text-lime-500 font-light">desk</span>
               </span>
             </Link>

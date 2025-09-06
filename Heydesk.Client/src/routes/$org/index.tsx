@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import data from "./data.json";
 import { ChartAreaInteractive } from "@/components/org/dashboard/chart-area-interactive";
 import { ChartBarMixed } from "@/components/org/dashboard/chart-bar-mixed";
 import { ChartPieDonut } from "@/components/org/dashboard/chart-pie-donut";
-import { DataTable } from "@/components/org/dashboard/data-table";
 import { SectionCards } from "@/components/org/dashboard/section-cards";
 
 export const Route = createFileRoute("/$org/")({
