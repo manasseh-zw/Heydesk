@@ -7,6 +7,7 @@ using Heydesk.Server.Domains.Document.Workflows;
 using Heydesk.Server.Domains.Document.Processors;
 using Heydesk.Server.Integrations;
 using Heydesk.Server.Domains.Organization;
+using Heydesk.Server.Domains.Agent;
 using Heydesk.Server.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -98,6 +99,9 @@ public static class ServiceExtensions
 
         // HTTP client for external API calls (Exa)
         services.AddHttpClient<IExaWebScraper, ExaWebScraper>();
+
+        // Agent services
+        services.AddScoped<IAgentService, AgentService>();
 
         return services;
     }

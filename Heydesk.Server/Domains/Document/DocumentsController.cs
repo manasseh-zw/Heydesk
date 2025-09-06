@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Heydesk.Server.Domains.Document;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/organizations/{organizationId:guid}/documents")]
 [Authorize]
 public class DocumentsController : ControllerBase
 {
@@ -27,7 +27,7 @@ public class DocumentsController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> GetDocuments(
-        [FromHeader(Name = "X-Organization-Id")] Guid organizationId,
+        [FromRoute] Guid organizationId,
         [FromQuery] GetDocumentsRequest request
     )
     {
@@ -43,7 +43,7 @@ public class DocumentsController : ControllerBase
 
     [HttpPost("ingest/url")]
     public async Task<IActionResult> IngestUrl(
-        [FromHeader(Name = "X-Organization-Id")] Guid organizationId,
+        [FromRoute] Guid organizationId,
         [FromBody] IngestUrlRequest request
     )
     {
@@ -59,7 +59,7 @@ public class DocumentsController : ControllerBase
 
     [HttpPost("ingest/document")]
     public async Task<IActionResult> IngestDocument(
-        [FromHeader(Name = "X-Organization-Id")] Guid organizationId,
+        [FromRoute] Guid organizationId,
         [FromForm] IngestDocumentRequest request
     )
     {
@@ -75,7 +75,7 @@ public class DocumentsController : ControllerBase
 
     [HttpPost("ingest/text")]
     public async Task<IActionResult> IngestText(
-        [FromHeader(Name = "X-Organization-Id")] Guid organizationId,
+        [FromRoute] Guid organizationId,
         [FromBody] IngestTextRequest request
     )
     {
@@ -91,7 +91,7 @@ public class DocumentsController : ControllerBase
 
     [HttpGet("ingest/stream")]
     public async Task StreamIngestion(
-        [FromHeader(Name = "X-Organization-Id")] Guid organizationId,
+        [FromRoute] Guid organizationId,
         CancellationToken ct
     )
     {
