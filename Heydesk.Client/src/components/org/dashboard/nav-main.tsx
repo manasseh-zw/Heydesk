@@ -33,7 +33,7 @@ export function NavMain({
               <SidebarMenuButton
                 asChild
                 tooltip={item.title}
-                className="h-10 px-3 gap-2 text-[15px]"
+                className="h-10 px-3 gap-2 text-[14px]"
                 isActive={
                   item.title === "Home"
                     ? normalize(item.url) === currentPath

@@ -68,7 +68,7 @@ export function TicketsKanban() {
   const columns: TicketColumnData[] = placeholderColumns;
 
   return (
-    <div className="">
+    <div className="px-5">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {columns.map((column) => (
           <TicketColumn key={column.id} column={column} />

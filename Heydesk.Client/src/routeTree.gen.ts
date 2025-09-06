@@ -9,14 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SupportRouteRouteImport } from './routes/support/route'
 import { Route as OrgRouteRouteImport } from './routes/$org/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SupportIndexRouteImport } from './routes/support/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as OrgIndexRouteImport } from './routes/$org/index'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/auth/signin'
 import { Route as OrgTicketsRouteImport } from './routes/$org/tickets'
 
+const SupportRouteRoute = SupportRouteRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrgRouteRoute = OrgRouteRouteImport.update({
   id: '/$org',
   path: '/$org',
@@ -26,6 +33,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SupportIndexRoute = SupportIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SupportRouteRoute,
 } as any)
 const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
   id: '/onboarding/',
@@ -56,11 +68,13 @@ const OrgTicketsRoute = OrgTicketsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/support': typeof SupportRouteRouteWithChildren
   '/$org/tickets': typeof OrgTicketsRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
   '/$org/': typeof OrgIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
+  '/support/': typeof SupportIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,27 +83,32 @@ export interface FileRoutesByTo {
   '/auth/signup': typeof AuthSignupRoute
   '/$org': typeof OrgIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
+  '/support': typeof SupportIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/support': typeof SupportRouteRouteWithChildren
   '/$org/tickets': typeof OrgTicketsRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
   '/$org/': typeof OrgIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
+  '/support/': typeof SupportIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/$org'
+    | '/support'
     | '/$org/tickets'
     | '/auth/signin'
     | '/auth/signup'
     | '/$org/'
     | '/onboarding'
+    | '/support/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -98,20 +117,24 @@ export interface FileRouteTypes {
     | '/auth/signup'
     | '/$org'
     | '/onboarding'
+    | '/support'
   id:
     | '__root__'
     | '/'
     | '/$org'
+    | '/support'
     | '/$org/tickets'
     | '/auth/signin'
     | '/auth/signup'
     | '/$org/'
     | '/onboarding/'
+    | '/support/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OrgRouteRoute: typeof OrgRouteRouteWithChildren
+  SupportRouteRoute: typeof SupportRouteRouteWithChildren
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
   OnboardingIndexRoute: typeof OnboardingIndexRoute
@@ -119,6 +142,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$org': {
       id: '/$org'
       path: '/$org'
@@ -132,6 +162,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/support/': {
+      id: '/support/'
+      path: '/'
+      fullPath: '/support/'
+      preLoaderRoute: typeof SupportIndexRouteImport
+      parentRoute: typeof SupportRouteRoute
     }
     '/onboarding/': {
       id: '/onboarding/'
@@ -185,9 +222,22 @@ const OrgRouteRouteWithChildren = OrgRouteRoute._addFileChildren(
   OrgRouteRouteChildren,
 )
 
+interface SupportRouteRouteChildren {
+  SupportIndexRoute: typeof SupportIndexRoute
+}
+
+const SupportRouteRouteChildren: SupportRouteRouteChildren = {
+  SupportIndexRoute: SupportIndexRoute,
+}
+
+const SupportRouteRouteWithChildren = SupportRouteRoute._addFileChildren(
+  SupportRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OrgRouteRoute: OrgRouteRouteWithChildren,
+  SupportRouteRoute: SupportRouteRouteWithChildren,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
   OnboardingIndexRoute: OnboardingIndexRoute,

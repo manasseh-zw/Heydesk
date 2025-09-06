@@ -1,17 +1,10 @@
 import * as React from "react";
 import {
   BarChartIcon,
-  CameraIcon,
   ClipboardListIcon,
-  DatabaseIcon,
-  FileCodeIcon,
-  FileIcon,
   FileTextIcon,
-  FolderIcon,
   HelpCircleIcon,
   LayoutDashboardIcon,
-  ListIcon,
-  SearchIcon,
   SettingsIcon,
   UsersIcon,
 } from "lucide-react";
@@ -19,6 +12,7 @@ import { useStore } from "@tanstack/react-store";
 import { Link } from "@tanstack/react-router";
 import { authActions, authState } from "@/lib/state/auth.state";
 import { Logo } from "@/components/logo";
+import { CopyButton } from "@/components/copy-button";
 import TeamSwitcher from "@/components/team-switcher";
 
 import {
@@ -27,7 +21,6 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { NavMain } from "./nav-main";
@@ -58,17 +51,16 @@ const data = {
       url: "#",
       icon: HelpCircleIcon,
     },
-    {
-      title: "Search",
-      url: "#",
-      icon: SearchIcon,
-    },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, organization } = useStore(authState);
   const basePath = organization?.slug ? `/${organization.slug}` : "/";
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const supportLink = organization?.slug
+    ? `${origin}/support/${organization.slug}`
+    : `${origin}/support`;
   const navItems = [
     { title: "Home", url: basePath, icon: LayoutDashboardIcon },
     { title: "Tickets", url: `${basePath}/tickets`, icon: ClipboardListIcon },
@@ -84,19 +76,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader className="px-1">
-        {/* Brand */}
+        {/* Brand + Share Support Link */}
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link
-              to={basePath}
-              className="flex items-center gap-2 px-2 py-2"
-              aria-label="Home"
-            >
-              <Logo className="h-6 w-auto shrink-0" />
-              <span className="text-lg font-light leading-none">
-                Hey<span className="text-lime-500 font-light">desk</span>
-              </span>
-            </Link>
+            <div className="flex items-center justify-between gap-2 px-2 py-2">
+              <Link
+                to={basePath}
+                className="flex items-center gap-2"
+                aria-label="Home"
+              >
+                <Logo className="h-6 w-auto shrink-0" />
+                <span className="text-lg font-light leading-none">
+                  Hey<span className="text-lime-500 font-light">desk</span>
+                </span>
+              </Link>
+              <CopyButton text={supportLink} tooltip="Copy support link" />
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
         <TeamSwitcher
