@@ -1,6 +1,6 @@
 namespace Heydesk.Server.Data.Models;
 
-public class UserModel
+public class CustomerModel
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public string Username { get; set; } = string.Empty;
@@ -10,14 +10,6 @@ public class UserModel
     public string? GoogleId { get; set; }
     public string? AvatarUrl { get; set; }
     public AuthProvider AuthProvider { get; set; }
-    public bool Onboarding { get; set; } = true;
 
-    public Guid? OrganizationId { get; set; }
-    public OrganizationModel? Organization { get; set; }
-}
-
-public enum AuthProvider
-{
-    Email,
-    Google,
+    public List<string> Organizations { get; set; } = [];
 }

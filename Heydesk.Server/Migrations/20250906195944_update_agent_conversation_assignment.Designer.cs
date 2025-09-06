@@ -4,6 +4,7 @@ using Heydesk.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Heydesk.Server.Migrations
 {
     [DbContext(typeof(RepositoryContext))]
-    partial class RepositoryContextModelSnapshot : ModelSnapshot
+    [Migration("20250906195944_update_agent_conversation_assignment")]
+    partial class update_agent_conversation_assignment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,46 +49,7 @@ namespace Heydesk.Server.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("AgentModel", (string)null);
-                });
-
-            modelBuilder.Entity("Heydesk.Server.Data.Models.CustomerModel", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<int>("AuthProvider")
-                        .HasColumnType("int");
-
-                    b.Property<string>("AvatarUrl")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("GoogleId")
-                        .HasColumnType("longtext");
-
-                    b.PrimitiveCollection<string>("Organizations")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CustomerModel");
+                    b.ToTable("AgentModel");
                 });
 
             modelBuilder.Entity("Heydesk.Server.Data.Models.DocumentModel", b =>
@@ -117,7 +81,7 @@ namespace Heydesk.Server.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("Documents", (string)null);
+                    b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("Heydesk.Server.Data.Models.OrganizationModel", b =>
@@ -144,51 +108,7 @@ namespace Heydesk.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Organizations", (string)null);
-                });
-
-            modelBuilder.Entity("Heydesk.Server.Data.Models.TicketModel", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("AssignedTo")
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Context")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Conversation")
-                        .IsRequired()
-                        .HasColumnType("json");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("OpenedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.ToTable("Tickets", (string)null);
+                    b.ToTable("Organizations");
                 });
 
             modelBuilder.Entity("Heydesk.Server.Data.Models.UserModel", b =>
@@ -231,7 +151,7 @@ namespace Heydesk.Server.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Heydesk.Server.Data.Models.AgentModel", b =>
@@ -256,31 +176,11 @@ namespace Heydesk.Server.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("Heydesk.Server.Data.Models.TicketModel", b =>
-                {
-                    b.HasOne("Heydesk.Server.Data.Models.CustomerModel", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Heydesk.Server.Data.Models.OrganizationModel", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Organization");
-                });
-
             modelBuilder.Entity("Heydesk.Server.Data.Models.UserModel", b =>
                 {
                     b.HasOne("Heydesk.Server.Data.Models.OrganizationModel", "Organization")
                         .WithMany("Members")
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("OrganizationId");
 
                     b.Navigation("Organization");
                 });
