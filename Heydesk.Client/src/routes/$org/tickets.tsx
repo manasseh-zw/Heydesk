@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TicketsKanban } from "@/components/org/tickets";
+import { TicketsKanban, TicketsTable } from "@/components/org/tickets";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/$org/tickets")({
   component: RouteComponent,
@@ -7,9 +8,22 @@ export const Route = createFileRoute("/$org/tickets")({
 
 function RouteComponent() {
   return (
-    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+    <div className="flex flex-col gap-4 py-3 md:gap-6 ">
       <div className="px-4 lg:px-6">
-        <TicketsKanban />
+        <Tabs defaultValue="table">
+          <div className="flex items-center justify-between mb-4">
+            <TabsList>
+              <TabsTrigger value="table">Table</TabsTrigger>
+              <TabsTrigger value="kanban">Kanban</TabsTrigger>
+            </TabsList>
+          </div>
+          <TabsContent value="table">
+            <TicketsTable />
+          </TabsContent>
+          <TabsContent value="kanban">
+            <TicketsKanban />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

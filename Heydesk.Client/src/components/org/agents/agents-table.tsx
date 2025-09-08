@@ -18,6 +18,7 @@ import {
   EllipsisIcon,
   ListFilterIcon,
 } from "lucide-react";
+import Avatar from "boring-avatars";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -54,11 +55,18 @@ const columns: ColumnDef<AgentRow>[] = [
     header: "Name",
     accessorKey: "name",
     cell: ({ row }) => (
-      <div
-        className="font-medium truncate max-w-[28ch]"
-        title={row.original.name}
-      >
-        {row.original.name}
+      <div className="flex items-center gap-3">
+        <Avatar
+          name={row.original.name}
+          size={28}
+          colors={["#0ea5e9", "#22c55e", "#f59e0b", "#6366f1", "#ec4899"]}
+        />
+        <div
+          className="font-medium truncate max-w-[28ch]"
+          title={row.original.name}
+        >
+          {row.original.name}
+        </div>
       </div>
     ),
     size: 260,
@@ -68,7 +76,7 @@ const columns: ColumnDef<AgentRow>[] = [
   {
     header: "Type",
     accessorKey: "type",
-    cell: ({ row }) => <Badge variant="secondary">{row.original.type}</Badge>,
+    cell: ({ row }) => <Badge variant="outline">{row.original.type}</Badge>,
     size: 120,
   },
   {

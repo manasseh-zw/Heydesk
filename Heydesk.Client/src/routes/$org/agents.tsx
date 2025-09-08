@@ -9,9 +9,9 @@ export const Route = createFileRoute("/$org/agents")({
 
 function RouteComponent() {
   return (
-    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+    <div className="flex flex-col gap-4 py-10 md:gap-6 md:py-12">
       <div className="px-4 lg:px-6">
-        <div className="mb-4 flex flex-wrap items-stretch gap-4">
+        <div className="mb-7 flex flex-wrap items-stretch gap-4">
           <ActionCard
             title="Add Chat Agent"
             icon={<MessageCircle size={22} />}
@@ -19,7 +19,7 @@ function RouteComponent() {
             style={{
               backgroundColor: "hsla(30, 100%, 97%, 0.30)",
               backgroundImage:
-                "radial-gradient(at 10% 20%, hsla(33, 100%, 83%, 0.18) 0px, transparent 50%), radial-gradient(at 90% 10%, hsla(333, 100%, 85%, 0.14) 0px, transparent 50%), radial-gradient(at 50% 90%, hsla(213, 100%, 85%, 0.14) 0px, transparent 50%)",
+                "radial-gradient(at 10% 20%, hsla(33, 100%, 83%, 0.18) 0px, transparent 50%), radial-gradient(at 90% 10%, hsla(333, 100%, 85%, 0.30) 0px, transparent 50%), radial-gradient(at 50% 90%, hsla(213, 100%, 85%, 0.14) 0px, transparent 50%)",
             }}
             onClick={() => {}}
           />
@@ -30,7 +30,7 @@ function RouteComponent() {
             style={{
               backgroundColor: "hsla(30, 100%, 97%, 0.30)",
               backgroundImage:
-                "radial-gradient(at 10% 20%, hsla(33, 100%, 83%, 0.18) 0px, transparent 50%), radial-gradient(at 90% 10%, hsla(333, 100%, 85%, 0.14) 0px, transparent 50%), radial-gradient(at 50% 90%, hsla(213, 100%, 85%, 0.14) 0px, transparent 50%)",
+                "radial-gradient(at 10% 20%, hsla(33, 100%, 83%, 0.18) 0px, transparent 50%), radial-gradient(at 90% 10%, hsla(333, 100%, 85%, 0.30) 0px, transparent 50%), radial-gradient(at 50% 90%, hsla(213, 100%, 85%, 0.14) 0px, transparent 50%)",
             }}
             onClick={() => {}}
           />

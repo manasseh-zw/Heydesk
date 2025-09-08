@@ -1,4 +1,4 @@
-import { TicketColumn } from "./TicketColumn";
+import { TicketColumn } from "./ticket-column";
 import type { TicketColumnData } from "./types";
 
 const placeholderColumns: TicketColumnData[] = [
@@ -68,7 +68,7 @@ export function TicketsKanban() {
   const columns: TicketColumnData[] = placeholderColumns;
 
   return (
-    <div className="px-5">
+    <div className="">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {columns.map((column) => (
           <TicketColumn key={column.id} column={column} />

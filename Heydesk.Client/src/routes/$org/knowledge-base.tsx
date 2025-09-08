@@ -9,9 +9,9 @@ export const Route = createFileRoute("/$org/knowledge-base")({
 
 function RouteComponent() {
   return (
-    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+    <div className="flex flex-col gap-4 py-10 md:gap-6 md:py-12">
       <div className="px-4 lg:px-6">
-        <div className="mb-4 flex flex-wrap items-stretch gap-4">
+        <div className="mb-7 flex flex-wrap items-stretch gap-4">
           <ActionCard
             title="Add URL"
             icon={<GlobeIcon size={22} />}
