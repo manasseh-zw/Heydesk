@@ -11,6 +11,8 @@ public class CreateAgentValidator : AbstractValidator<CreateAgentRequest>
             .NotEmpty()
             .MinimumLength(2)
             .MaximumLength(100);
+        RuleFor(a => a.Description)
+            .MaximumLength(500);
         RuleFor(a => a.SystemPrompt)
             .NotEmpty()
             .MinimumLength(10)

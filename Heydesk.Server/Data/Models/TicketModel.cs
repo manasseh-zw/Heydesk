@@ -20,7 +20,7 @@ public class TicketModel
 
     public Guid AssignedTo { get; set; }
 
-    public ConversationModel Conversation { get; set; } = new();
+    public ConversationModel? Conversation { get; set; }
 }
 
 public enum TicketStatus

@@ -34,6 +34,7 @@ public class AgentService : IAgentService
             Id = Guid.CreateVersion7(),
             OrganizationId = organizationId,
             Name = request.Name,
+            Description = request.Description,
             SystemPrompt = request.SystemPrompt,
             Type = request.Type,
         };
@@ -45,8 +46,10 @@ public class AgentService : IAgentService
             agent.Id,
             agent.OrganizationId,
             agent.Name,
+            agent.Description,
             agent.SystemPrompt,
-            agent.Type
+            agent.Type,
+            agent.CreatedAt
         );
         return Result.Ok(response);
     }

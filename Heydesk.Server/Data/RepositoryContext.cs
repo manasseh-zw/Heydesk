@@ -42,24 +42,28 @@ public class RepositoryContext(DbContextOptions<RepositoryContext> options) : Db
                 .HasForeignKey(t => t.CustomerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Conversation stored as JSON using value converter
-            var jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = false,
-            };
-
-            entity.Property(t => t
-            .Conversation)
-                .HasConversion(
-                    v => JsonSerializer.Serialize(v, jsonOptions),
-                    v => JsonSerializer.Deserialize<ConversationModel>(v, jsonOptions) ?? new ConversationModel())
-                .HasColumnType("json");
+            entity.HasOne(t => t.Conversation)
+                .WithOne(c => c.Ticket)
+                .HasForeignKey<ConversationModel>(c => c.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<AgentModel>().ToTable("AgentModel");
         modelBuilder.Entity<UserModel>().ToTable("Users");
         modelBuilder.Entity<DocumentModel>().ToTable("Documents");
+
+        modelBuilder.Entity<ConversationModel>(entity =>
+        {
+            entity.ToTable("Conversations");
+            entity.HasMany(c => c.Messages)
+                .WithOne()
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MessageModel>(entity =>
+        {
+            entity.ToTable("Messages");
+        });
     }
 
     public DbSet<UserModel> Users { get; set; }
@@ -67,4 +71,6 @@ public class RepositoryContext(DbContextOptions<RepositoryContext> options) : Db
     public DbSet<DocumentModel> Documents { get; set; }
     public DbSet<TicketModel> Tickets { get; set; }
     public DbSet<AgentModel> Agents { get; set; }
+    public DbSet<ConversationModel> Conversations { get; set; }
+    public DbSet<MessageModel> Messages { get; set; }
 }
