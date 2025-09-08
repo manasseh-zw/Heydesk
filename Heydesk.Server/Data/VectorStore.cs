@@ -31,7 +31,7 @@ public class VectorStore : IVectorStore
 
     public async Task<List<SearchResult>> SearchAsync(string orgId, string query)
     {
-        var result = await _store.SearchAsync(query, 5);
+        var result = await _store.SearchAsync(query, 5, new SearchOptions() { Collection = orgId });
 
         return result.ToList();
     }

@@ -18,8 +18,8 @@
     </PackageReference>
     <PackageReference Include="PdfPig" Version="0.1.11" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
-    <PackageReference Include="TiDB.Vector" Version="1.1.0" />
-    <PackageReference Include="TiDB.Vector.AzureOpenAI" Version="1.1.0" />
+    <PackageReference Include="TiDB.Vector" Version="1.2.0" />
+    <PackageReference Include="TiDB.Vector.AzureOpenAI" Version="1.2.0" />
   </ItemGroup>
 
 </Project>

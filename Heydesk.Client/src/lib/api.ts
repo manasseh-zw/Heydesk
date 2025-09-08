@@ -5,11 +5,14 @@ export const apiRequest = async <T>(
 ): Promise<T> => {
   try {
     const url = `${config.serverUrl}${endpoint}`;
+    const isFormData =
+      typeof options.body !== "undefined" && options.body instanceof FormData;
     const response = await fetch(url, {
       ...options,
       credentials: "include", // Important for cookies
       headers: {
-        "Content-Type": "application/json",
+        // Only set JSON content type when not sending FormData
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...options.headers,
       },
     });

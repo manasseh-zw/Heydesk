@@ -90,10 +90,7 @@ public class DocumentsController : ControllerBase
     }
 
     [HttpGet("ingest/stream")]
-    public async Task StreamIngestion(
-        [FromRoute] Guid organizationId,
-        CancellationToken ct
-    )
+    public async Task StreamIngestion([FromRoute] Guid organizationId, CancellationToken ct)
     {
         Response.Headers.Append("Content-Type", "text/event-stream");
         Response.Headers.Append("Cache-Control", "no-cache");
