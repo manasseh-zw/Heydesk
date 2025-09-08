@@ -27,6 +27,7 @@ const buttonVariants = cva(
         // New sizing: lg = old default, default slightly smaller, sm one step down
         xl: "h-14 px-10 rounded-full py-5 has-[>svg]:px-4 text-lg",
         lg: "h-12 px-8 rounded-full py-4 has-[>svg]:px-3",
+        normal: "h-9 px-4 rounded-md has-[>svg]:px-3",
         default: "h-9 px-5 rounded-full py-2.5 has-[>svg]:px-3",
         sm: "h-8 rounded-md gap-1.5 px-4 py-2 has-[>svg]:px-3",
         icon: "size-9",

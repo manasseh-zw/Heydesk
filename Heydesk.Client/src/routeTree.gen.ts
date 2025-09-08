@@ -18,6 +18,8 @@ import { Route as OrgIndexRouteImport } from './routes/$org/index'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/auth/signin'
 import { Route as OrgTicketsRouteImport } from './routes/$org/tickets'
+import { Route as OrgKnowledgeBaseRouteImport } from './routes/$org/knowledge-base'
+import { Route as OrgAgentsRouteImport } from './routes/$org/agents'
 
 const SupportRouteRoute = SupportRouteRouteImport.update({
   id: '/support',
@@ -64,11 +66,23 @@ const OrgTicketsRoute = OrgTicketsRouteImport.update({
   path: '/tickets',
   getParentRoute: () => OrgRouteRoute,
 } as any)
+const OrgKnowledgeBaseRoute = OrgKnowledgeBaseRouteImport.update({
+  id: '/knowledge-base',
+  path: '/knowledge-base',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgAgentsRoute = OrgAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
   '/support': typeof SupportRouteRouteWithChildren
+  '/$org/agents': typeof OrgAgentsRoute
+  '/$org/knowledge-base': typeof OrgKnowledgeBaseRoute
   '/$org/tickets': typeof OrgTicketsRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -78,6 +92,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$org/agents': typeof OrgAgentsRoute
+  '/$org/knowledge-base': typeof OrgKnowledgeBaseRoute
   '/$org/tickets': typeof OrgTicketsRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -90,6 +106,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
   '/support': typeof SupportRouteRouteWithChildren
+  '/$org/agents': typeof OrgAgentsRoute
+  '/$org/knowledge-base': typeof OrgKnowledgeBaseRoute
   '/$org/tickets': typeof OrgTicketsRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -103,6 +121,8 @@ export interface FileRouteTypes {
     | '/'
     | '/$org'
     | '/support'
+    | '/$org/agents'
+    | '/$org/knowledge-base'
     | '/$org/tickets'
     | '/auth/signin'
     | '/auth/signup'
@@ -112,6 +132,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$org/agents'
+    | '/$org/knowledge-base'
     | '/$org/tickets'
     | '/auth/signin'
     | '/auth/signup'
@@ -123,6 +145,8 @@ export interface FileRouteTypes {
     | '/'
     | '/$org'
     | '/support'
+    | '/$org/agents'
+    | '/$org/knowledge-base'
     | '/$org/tickets'
     | '/auth/signin'
     | '/auth/signup'
@@ -205,15 +229,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgTicketsRouteImport
       parentRoute: typeof OrgRouteRoute
     }
+    '/$org/knowledge-base': {
+      id: '/$org/knowledge-base'
+      path: '/knowledge-base'
+      fullPath: '/$org/knowledge-base'
+      preLoaderRoute: typeof OrgKnowledgeBaseRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/agents': {
+      id: '/$org/agents'
+      path: '/agents'
+      fullPath: '/$org/agents'
+      preLoaderRoute: typeof OrgAgentsRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
   }
 }
 
 interface OrgRouteRouteChildren {
+  OrgAgentsRoute: typeof OrgAgentsRoute
+  OrgKnowledgeBaseRoute: typeof OrgKnowledgeBaseRoute
   OrgTicketsRoute: typeof OrgTicketsRoute
   OrgIndexRoute: typeof OrgIndexRoute
 }
 
 const OrgRouteRouteChildren: OrgRouteRouteChildren = {
+  OrgAgentsRoute: OrgAgentsRoute,
+  OrgKnowledgeBaseRoute: OrgKnowledgeBaseRoute,
   OrgTicketsRoute: OrgTicketsRoute,
   OrgIndexRoute: OrgIndexRoute,
 }

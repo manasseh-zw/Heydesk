@@ -67,7 +67,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: "Agents", url: `${basePath}/agents`, icon: UsersIcon },
     {
       title: "Knowledge Base",
-      url: `${basePath}/knowledgebase`,
+      url: `${basePath}/knowledge-base`,
       icon: FileTextIcon,
     },
     { title: "Analytics", url: `${basePath}/analytics`, icon: BarChartIcon },
