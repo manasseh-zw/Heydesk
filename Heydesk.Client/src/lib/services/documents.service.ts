@@ -8,6 +8,7 @@ import type {
   IngestUrlRequest,
   IngestionSseEvent,
 } from "@/lib/types/document";
+import { queryOptions } from "@tanstack/react-query";
 
 export const getDocuments = async (
   organizationId: string,
@@ -21,6 +22,16 @@ export const getDocuments = async (
   const url = `/api/organizations/${organizationId}/documents${queryString ? `?${queryString}` : ""}`;
   return apiRequest<GetDocumentsResponse>(url);
 };
+
+export const documentsQueryOptions = (
+  organizationId: string,
+  params: GetDocumentsRequest = {}
+) =>
+  queryOptions({
+    queryKey: ["documents", organizationId, params],
+    queryFn: () => getDocuments(organizationId, params),
+    staleTime: 30_000,
+  });
 
 export const ingestUrl = async (
   organizationId: string,

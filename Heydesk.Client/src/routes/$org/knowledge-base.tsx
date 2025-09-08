@@ -2,8 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import DocumentsTable from "@/components/org/knowledge-base/documents-table";
 import { ActionCard } from "@/components/action-card";
 import { GlobeIcon, FileText, TypeIcon } from "lucide-react";
+import { authState } from "@/lib/state/auth.state";
+import { documentsQueryOptions } from "@/lib/services/documents.service";
 
 export const Route = createFileRoute("/$org/knowledge-base")({
+  loader: async ({ context, params }) => {
+    const orgId = params.org ?? authState.state.organization?.id;
+    if (!orgId) return null;
+    const query = documentsQueryOptions(orgId, { page: 1, pageSize: 10 });
+    await context.queryClient.ensureQueryData(query);
+    return null;
+  },
   component: RouteComponent,
 });
 

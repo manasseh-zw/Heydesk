@@ -41,8 +41,12 @@ import {
 import {
   type Document,
   DocumentIngestStatus,
-  DocumentType,
+  type GetDocumentsResponse,
 } from "@/lib/types/document";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useStore } from "@tanstack/react-store";
+import { authState } from "@/lib/state/auth.state";
+import { getDocuments } from "@/lib/services/documents.service";
 
 type DocumentRow = Document;
 
@@ -143,35 +147,26 @@ export default function DocumentsTable() {
   const [data, setData] = useState<DocumentRow[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const { organization } = useStore(authState);
+  const orgId = organization?.id;
+  const currentPage = pagination.pageIndex + 1;
+  const pageSize = pagination.pageSize;
+
+  const query = useQuery<GetDocumentsResponse, Error>({
+    queryKey: ["documents", orgId, { page: currentPage, pageSize }],
+    queryFn: () =>
+      orgId
+        ? getDocuments(orgId, { page: currentPage, pageSize })
+        : Promise.resolve({ documents: [], totalCount: 0 }),
+    enabled: !!orgId,
+    placeholderData: keepPreviousData,
+  });
+
   useEffect(() => {
-    const placeholders: DocumentRow[] = [
-      {
-        id: crypto.randomUUID(),
-        name: "Getting Started Guide",
-        type: DocumentType.Text,
-        sourceUrl: null,
-        status: DocumentIngestStatus.Completed,
-        content: null,
-      },
-      {
-        id: crypto.randomUUID(),
-        name: "Support Portal",
-        type: DocumentType.Url,
-        sourceUrl: "https://example.com/support",
-        status: DocumentIngestStatus.Processing,
-        content: null,
-      },
-      {
-        id: crypto.randomUUID(),
-        name: "SLA.pdf",
-        type: DocumentType.Document,
-        sourceUrl: null,
-        status: DocumentIngestStatus.Pending,
-        content: null,
-      },
-    ];
-    setData(placeholders);
-  }, []);
+    if (query.data) {
+      setData(query.data.documents);
+    }
+  }, [query.data]);
 
   const table = useReactTable({
     data,
@@ -283,7 +278,26 @@ export default function DocumentsTable() {
             ))}
           </TableHeader>
           <TableBody className="p-3">
-            {table.getRowModel().rows?.length ? (
+            {query.isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  Loading documents...
+                </TableCell>
+              </TableRow>
+            ) : query.isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  {(query.error as Error).message ||
+                    "Failed to load documents."}
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
