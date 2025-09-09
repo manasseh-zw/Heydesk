@@ -25,16 +25,19 @@ public class DocumentService : IDocumentService
     private readonly RepositoryContext _repository;
     private readonly ILogger<DocumentService> _logger;
     private readonly IDocumentIngestEventsQueue<DocumentIngestEvent> _ingestQueue;
+    private readonly IIngestionSseBroker _sseBroker;
 
     public DocumentService(
         RepositoryContext repository,
         ILogger<DocumentService> logger,
-        IDocumentIngestEventsQueue<DocumentIngestEvent> ingestQueue
+        IDocumentIngestEventsQueue<DocumentIngestEvent> ingestQueue,
+        IIngestionSseBroker sseBroker
     )
     {
         _repository = repository;
         _logger = logger;
         _ingestQueue = ingestQueue;
+        _sseBroker = sseBroker;
     }
 
     public async Task<Result<GetDocumentsResponse>> GetDocuments(
@@ -144,6 +147,7 @@ public class DocumentService : IDocumentService
                     FileContent: bytes
                 )
             );
+            await _sseBroker.PublishAsync(new IngestionSseEvent(OrganizationId, document.Id, DocumentIngestStatus.Pending));
 
             return Result.Ok(
                 new GetDocumentResponse(
@@ -195,6 +199,7 @@ public class DocumentService : IDocumentService
                     Url: request.Url
                 )
             );
+            await _sseBroker.PublishAsync(new IngestionSseEvent(OrganizationId, document.Id, DocumentIngestStatus.Pending));
 
             return Result.Ok(
                 new GetDocumentResponse(
@@ -246,6 +251,7 @@ public class DocumentService : IDocumentService
                     TextContent: request.Content
                 )
             );
+            await _sseBroker.PublishAsync(new IngestionSseEvent(OrganizationId, document.Id, DocumentIngestStatus.Pending));
 
             return Result.Ok(
                 new GetDocumentResponse(

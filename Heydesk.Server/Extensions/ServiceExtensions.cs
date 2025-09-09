@@ -7,6 +7,7 @@ using Heydesk.Server.Domains.Document.Workflows;
 using Heydesk.Server.Domains.Document.Processors;
 using Heydesk.Server.Integrations;
 using Heydesk.Server.Domains.Organization;
+using Heydesk.Server.Domains.Organization.Events;
 using Heydesk.Server.Domains.Agent;
 using Heydesk.Server.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -82,6 +83,7 @@ public static class ServiceExtensions
 
         // Organization services
         services.AddScoped<IOrgService, OrgService>();
+        services.AddScoped<IOrganizationEvents, OrganizationEventsHandler>();
 
         // Document services
         services.AddScoped<IDocumentService, DocumentService>();
