@@ -24,17 +24,17 @@ public class DocumentService : IDocumentService
 {
     private readonly RepositoryContext _repository;
     private readonly ILogger<DocumentService> _logger;
-    private readonly IDocumentIngestEventsQueue<DocumentIngestEvent> _ingestQueue;
+    private readonly IDocumentsEvents _docEvents;
 
     public DocumentService(
         RepositoryContext repository,
         ILogger<DocumentService> logger,
-        IDocumentIngestEventsQueue<DocumentIngestEvent> ingestQueue
+        IDocumentsEvents docEvents
     )
     {
         _repository = repository;
         _logger = logger;
-        _ingestQueue = ingestQueue;
+        _docEvents = docEvents;
     }
 
     public async Task<Result<GetDocumentsResponse>> GetDocuments(
@@ -136,25 +136,7 @@ public class DocumentService : IDocumentService
                 return Result.Fail("Invalid PDF file");
             }
 
-            await _ingestQueue.Writer.WriteAsync(
-                new DocumentIngestEvent(
-                    document.Id,
-                    OrganizationId,
-                    IngestEventType.Document,
-                    FileContent: bytes
-                )
-            );
-
-            return Result.Ok(
-                new GetDocumentResponse(
-                    document.Id,
-                    document.Name,
-                    document.Type,
-                    document.SourceUrl ?? string.Empty,
-                    document.Status,
-                    document.Content
-                )
-            );
+            return await _docEvents.EnqueueDocument(OrganizationId, request.Name, bytes);
         }
         catch (Exception ex)
         {
@@ -174,38 +156,7 @@ public class DocumentService : IDocumentService
     {
         try
         {
-            var document = new DocumentModel
-            {
-                Id = Guid.CreateVersion7(),
-                Name = request.Url,
-                Type = DocumentType.Url,
-                OrganizationId = OrganizationId,
-                Status = DocumentIngestStatus.Pending,
-                SourceUrl = request.Url,
-            };
-
-            _repository.Documents.Add(document);
-            await _repository.SaveChangesAsync();
-
-            await _ingestQueue.Writer.WriteAsync(
-                new DocumentIngestEvent(
-                    document.Id,
-                    OrganizationId,
-                    IngestEventType.Url,
-                    Url: request.Url
-                )
-            );
-
-            return Result.Ok(
-                new GetDocumentResponse(
-                    document.Id,
-                    document.Name,
-                    document.Type,
-                    document.SourceUrl ?? string.Empty,
-                    document.Status,
-                    document.Content
-                )
-            );
+            return await _docEvents.EnqueueUrl(OrganizationId, request.Url);
         }
         catch (Exception ex)
         {
@@ -225,38 +176,7 @@ public class DocumentService : IDocumentService
     {
         try
         {
-            var document = new DocumentModel
-            {
-                Id = Guid.CreateVersion7(),
-                Name = request.Name,
-                Type = DocumentType.Text,
-                OrganizationId = OrganizationId,
-                Status = DocumentIngestStatus.Pending,
-                SourceUrl = string.Empty,
-            };
-
-            _repository.Documents.Add(document);
-            await _repository.SaveChangesAsync();
-
-            await _ingestQueue.Writer.WriteAsync(
-                new DocumentIngestEvent(
-                    document.Id,
-                    OrganizationId,
-                    IngestEventType.Text,
-                    TextContent: request.Content
-                )
-            );
-
-            return Result.Ok(
-                new GetDocumentResponse(
-                    document.Id,
-                    document.Name,
-                    document.Type,
-                    document.SourceUrl ?? string.Empty,
-                    document.Status,
-                    document.Content
-                )
-            );
+            return await _docEvents.EnqueueText(OrganizationId, request.Name, request.Content);
         }
         catch (Exception ex)
         {

@@ -1,7 +1,7 @@
 using Heydesk.Server.Data;
 using Heydesk.Server.Data.Models;
 using Heydesk.Server.Domains.User;
-using Heydesk.Server.Domains.Organization.Events;
+using Heydesk.Server.Domains.Document.Workflows;
 using Heydesk.Server.Utils;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,12 +16,12 @@ public interface IOrgService
 public class OrgService : IOrgService
 {
     private readonly RepositoryContext _repository;
-    private readonly IOrganizationEvents _orgEvents;
+    private readonly IDocumentsEvents _documentsEvents;
 
-    public OrgService(RepositoryContext repository, IOrganizationEvents orgEvents)
+    public OrgService(RepositoryContext repository, IDocumentsEvents documentsEvents)
     {
         _repository = repository;
-        _orgEvents = orgEvents;
+        _documentsEvents = documentsEvents;
     }
 
     public async Task<Result<GetOrgResponse>> CreateOrganization(
@@ -69,8 +69,11 @@ public class OrgService : IOrgService
             organization.IconUrl
         );
 
-        // Fire OrganizationCreated event (in-process). Handler will trigger document ingestion if URL exists.
-        await _orgEvents.OrganizationCreated(new OrganizationCreated(organization.Id, organization.Url));
+        // Enqueue initial URL ingestion if present
+        if (!string.IsNullOrWhiteSpace(organization.Url))
+        {
+            await _documentsEvents.EnqueueUrl(organization.Id, organization.Url);
+        }
 
         return Result.Ok(response);
     }
