@@ -6,8 +6,8 @@ import { authState } from "@/lib/state/auth.state";
 import { documentsQueryOptions } from "@/lib/services/documents.service";
 
 export const Route = createFileRoute("/$org/knowledge-base")({
-  loader: async ({ context, params }) => {
-    const orgId = params.org ?? authState.state.organization?.id;
+  loader: async ({ context }) => {
+    const orgId = authState.state.organization?.id;
     if (!orgId) return null;
     const query = documentsQueryOptions(orgId, { page: 1, pageSize: 10 });
     await context.queryClient.ensureQueryData(query);

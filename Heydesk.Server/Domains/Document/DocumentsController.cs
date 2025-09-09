@@ -12,17 +12,15 @@ public class DocumentsController : ControllerBase
 {
     private readonly IDocumentService _documentService;
     private readonly ILogger<DocumentsController> _logger;
-    private readonly IIngestionSseBroker _sseBroker;
+
 
     public DocumentsController(
         IDocumentService documentService,
-        ILogger<DocumentsController> logger,
-        IIngestionSseBroker sseBroker
+        ILogger<DocumentsController> logger
     )
     {
         _documentService = documentService;
         _logger = logger;
-        _sseBroker = sseBroker;
     }
 
     [HttpGet]
@@ -89,18 +87,5 @@ public class DocumentsController : ControllerBase
         return Ok(result.Data);
     }
 
-    [HttpGet("ingest/stream")]
-    public async Task StreamIngestion([FromRoute] Guid organizationId, CancellationToken ct)
-    {
-        Response.Headers.Append("Content-Type", "text/event-stream");
-        Response.Headers.Append("Cache-Control", "no-cache");
-        Response.Headers.Append("X-Accel-Buffering", "no");
-        Response.StatusCode = StatusCodes.Status200OK;
-        await Response.StartAsync(ct);
-        await foreach (var evt in _sseBroker.Subscribe(organizationId, ct))
-        {
-            await Response.WriteAsync(JsonSerializer.Serialize(evt), cancellationToken: ct);
-            await Response.Body.FlushAsync(ct);
-        }
-    }
+
 }

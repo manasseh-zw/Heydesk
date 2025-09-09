@@ -10,15 +10,13 @@ public class DocumentIngestEventHandler
     private readonly IUrlProcessor _urlProcessor;
     private readonly IDocProcessor _docProcessor;
     private readonly ILogger<DocumentIngestEventHandler> _logger;
-    private readonly IIngestionSseBroker _sseBroker;
 
     public DocumentIngestEventHandler(
         Data.RepositoryContext repository,
         Data.IVectorStore vectorStore,
         IUrlProcessor urlProcessor,
         IDocProcessor docProcessor,
-        ILogger<DocumentIngestEventHandler> logger,
-        IIngestionSseBroker sseBroker
+        ILogger<DocumentIngestEventHandler> logger
     )
     {
         _repository = repository;
@@ -26,7 +24,6 @@ public class DocumentIngestEventHandler
         _urlProcessor = urlProcessor;
         _docProcessor = docProcessor;
         _logger = logger;
-        _sseBroker = sseBroker;
     }
 
     public async Task HandleIngestAsync(DocumentIngestEvent ingestEvent, CancellationToken ct)
@@ -68,18 +65,14 @@ public class DocumentIngestEventHandler
 
             document.Status = DocumentIngestStatus.Completed;
             await _repository.SaveChangesAsync(ct);
-            await _sseBroker.PublishAsync(
-                new IngestionSseEvent(document.OrganizationId, document.Id, document.Status)
-            );
+
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to ingest document {DocumentId}", ingestEvent.DocumentId);
             document.Status = DocumentIngestStatus.Failed;
             await _repository.SaveChangesAsync(ct);
-            await _sseBroker.PublishAsync(
-                new IngestionSseEvent(document.OrganizationId, document.Id, document.Status)
-            );
+
         }
     }
 

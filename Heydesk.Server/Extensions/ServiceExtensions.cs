@@ -90,7 +90,6 @@ public static class ServiceExtensions
         services.AddSingleton<IDocumentIngestEventsQueue<DocumentIngestEvent>, DocumentIngestEventsQueue<DocumentIngestEvent>>();
         services.AddHostedService<DocumentIngestProcessor>();
         services.AddScoped<DocumentIngestEventHandler>();
-        services.AddSingleton<IIngestionSseBroker, IngestionSseBroker>();
 
         // Document processors
         services.AddScoped<IUrlProcessor, UrlProcessor>();
@@ -110,7 +109,7 @@ public static class ServiceExtensions
 
     public static IServiceCollection ConfigureSignalR(this IServiceCollection services)
     {
-        // No SignalR; using SSE for ingestion notifications
+        // Placeholder: SignalR will be configured next
         return services;
     }
 }
