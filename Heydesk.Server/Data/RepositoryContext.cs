@@ -64,9 +64,12 @@ public class RepositoryContext(DbContextOptions<RepositoryContext> options) : Db
         {
             entity.ToTable("Messages");
         });
+
+        modelBuilder.Entity<CustomerModel>().ToTable("Customers");
     }
 
     public DbSet<UserModel> Users { get; set; }
+    public DbSet<CustomerModel> Customers { get; set; }
     public DbSet<OrganizationModel> Organizations { get; set; }
     public DbSet<DocumentModel> Documents { get; set; }
     public DbSet<TicketModel> Tickets { get; set; }

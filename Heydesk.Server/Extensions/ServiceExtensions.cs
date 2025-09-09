@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Heydesk.Server.Domains.Notifications;
 using Heydesk.Server.Domains.Agent;
+using Heydesk.Server.Domains.Ticket;
 
 namespace Heydesk.Server.Extensions;
 
@@ -103,6 +104,9 @@ public static class ServiceExtensions
 
         // Agent services
         services.AddScoped<IAgentService, AgentService>();
+
+        // Ticket services
+        services.AddScoped<ITicketService, TicketService>();
 
         return services;
     }

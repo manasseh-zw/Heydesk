@@ -1,93 +1,87 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, MessageCircle, Paperclip } from "lucide-react";
-import type { Ticket } from "./types";
+import type { Ticket, AssignedEntityType } from "@/lib/types/ticket";
+import BoringAvatar from "boring-avatars";
 
 interface TicketCardProps {
   ticket: Ticket;
 }
 
 export function TicketCard({ ticket }: TicketCardProps) {
-  const initials = ticket.assignee?.name
-    ? ticket.assignee.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-    : "NA";
+  const name = ticket.assignedTo?.name ?? "Unassigned";
+  const initial = name.charAt(0).toUpperCase();
+  const colors = ["#0ea5e9", "#22c55e", "#f59e0b", "#6366f1", "#ec4899"];
+
+  const statusColor = (() => {
+    switch (ticket.status) {
+      case "Open":
+        return "bg-blue-500";
+      case "Escalated":
+        return "bg-yellow-500";
+      case "Closed":
+        return "bg-lime-500";
+      default:
+        return "bg-neutral-400";
+    }
+  })();
+
+  const avatarEl = (() => {
+    if (!ticket.assignedTo) {
+      return (
+        <BoringAvatar
+          name={ticket.id}
+          size={26}
+          variant="marble"
+          colors={colors}
+        />
+      );
+    }
+    if (ticket.assignedTo.type === ("HumanAgent" as AssignedEntityType)) {
+      if (ticket.assignedTo.avatarUrl) {
+        return (
+          <Avatar className="size-7">
+            <AvatarImage src={ticket.assignedTo.avatarUrl} alt={name} />
+            <AvatarFallback className="text-[10px]">{initial}</AvatarFallback>
+          </Avatar>
+        );
+      }
+      return (
+        <BoringAvatar name={name} size={26} variant="beam" colors={colors} />
+      );
+    }
+    return (
+      <BoringAvatar name={name} size={26} variant="marble" colors={colors} />
+    );
+  })();
 
   return (
-    <Card className="transition-all duration-300 border bg-white/60 dark:bg-neutral-800/60 backdrop-blur-sm hover:bg-white/70 dark:hover:bg-neutral-700/70">
-      <CardContent className="p-5">
-        <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 leading-tight">
-              {ticket.title}
-            </h4>
-            {ticket.priority && (
-              <Badge variant="secondary" className="capitalize">
-                {ticket.priority}
+    <Card className="transition-all duration-200 border bg-white/70 dark:bg-neutral-800/60 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-neutral-700/70">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span
+                className={`inline-block h-1.5 w-1.5 rounded-full ${statusColor}`}
+                aria-hidden="true"
+              />
+              <Badge variant="outline" className="text-xs">
+                {ticket.status}
               </Badge>
+            </div>
+            <div
+              className="font-medium text-neutral-900 dark:text-neutral-100 truncate max-w-[36ch]"
+              title={ticket.subject}
+            >
+              {ticket.subject}
+            </div>
+            {ticket.context && (
+              <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-1 line-clamp-2">
+                {ticket.context}
+              </p>
             )}
           </div>
-
-          {ticket.description && (
-            <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">
-              {ticket.description}
-            </p>
-          )}
-
-          {ticket.tags && ticket.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {ticket.tags.map((tag) => (
-                <Badge
-                  key={tag}
-                  className="text-xs bg-neutral-100/60 dark:bg-neutral-700/60 text-neutral-800 dark:text-neutral-200 border-neutral-200/50 dark:border-neutral-600/50 backdrop-blur-sm"
-                >
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between pt-2 border-t border-neutral-200/30 dark:border-neutral-700/30">
-            <div className="flex items-center gap-4 text-neutral-600 dark:text-neutral-400">
-              {ticket.dueDate && (
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-xs font-medium">
-                    {new Date(ticket.dueDate).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "2-digit",
-                    })}
-                  </span>
-                </div>
-              )}
-              {typeof ticket.comments === "number" && (
-                <div className="flex items-center gap-1">
-                  <MessageCircle className="w-4 h-4" />
-                  <span className="text-xs font-medium">{ticket.comments}</span>
-                </div>
-              )}
-              {typeof ticket.attachments === "number" && (
-                <div className="flex items-center gap-1">
-                  <Paperclip className="w-4 h-4" />
-                  <span className="text-xs font-medium">
-                    {ticket.attachments}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {ticket.assignee && (
-              <Avatar className="w-8 h-8 ring-2 ring-white/50 dark:ring-neutral-700/50">
-                <AvatarImage src={ticket.assignee.avatarUrl} />
-                <AvatarFallback className="bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 font-medium">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-            )}
-          </div>
+          <div className="shrink-0">{avatarEl}</div>
         </div>
       </CardContent>
     </Card>

@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { AppSidebar } from "@/components/org/dashboard/app-sidebar";
-import { SiteHeader } from "@/components/org/dashboard/site-header";
+import { AppSidebar } from "@/components/org/layout/app-sidebar";
+import { SiteHeader } from "@/components/org/layout/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import NotificationsListener from "@/components/org/NotificationsListener";
 

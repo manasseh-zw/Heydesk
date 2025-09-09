@@ -15,8 +15,10 @@ import {
 import {
   CircleXIcon,
   Columns3Icon,
+  EditIcon,
   EllipsisIcon,
   ListFilterIcon,
+  TrashIcon,
 } from "lucide-react";
 import Avatar from "boring-avatars";
 
@@ -33,11 +35,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { type Agent, AgentType } from "@/lib/types/agent";
+import { type Row } from "@tanstack/react-table";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -98,18 +104,7 @@ const columns: ColumnDef<AgentRow>[] = [
   {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
-    cell: () => (
-      <div className="flex justify-end">
-        <Button
-          size="icon"
-          variant="ghost"
-          className="shadow-none"
-          aria-label="Actions"
-        >
-          <EllipsisIcon size={16} aria-hidden="true" />
-        </Button>
-      </div>
-    ),
+    cell: ({ row }) => <AgentRowActions row={row} />,
     size: 60,
     enableHiding: false,
   },
@@ -293,5 +288,50 @@ export default function AgentsTable() {
         </Table>
       </div>
     </div>
+  );
+}
+
+function AgentRowActions({ row }: { row: Row<AgentRow> }) {
+  const handleEdit = () => {
+    console.log("Edit agent:", row.original.id);
+  };
+
+  const handleDelete = () => {
+    console.log("Delete agent:", row.original.id);
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <div className="flex justify-end">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="shadow-none"
+            aria-label="Actions"
+          >
+            <EllipsisIcon size={16} aria-hidden="true" />
+          </Button>
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={handleEdit}>
+            <EditIcon size={16} className="mr-2" />
+            Edit
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={handleDelete}
+          >
+            <TrashIcon size={16} className="mr-2" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

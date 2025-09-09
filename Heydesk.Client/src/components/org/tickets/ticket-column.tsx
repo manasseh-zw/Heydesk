@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
-import { Plus } from "lucide-react";
 import { TicketCard } from "./ticket-card";
-import type { Ticket, TicketColumnData } from "./types";
+import type { TicketColumnData } from "./types";
+import type { Ticket } from "@/lib/types/ticket";
 
 interface TicketColumnProps {
   column: TicketColumnData;
@@ -10,7 +10,7 @@ interface TicketColumnProps {
 
 export function TicketColumn({ column, onAddTicket }: TicketColumnProps) {
   return (
-    <div className="bg-sidebar p-3 dark:bg-neutral-900/20 backdrop-blur-xl rounded-3xl p-0  dark:border-neutral-700/50">
+    <div className="bg-sidebar p-3 dark:bg-neutral-900/20 backdrop-blur-xl rounded-3xl dark:border-neutral-700/50">
       <div className="flex items-center justify-between mb-4 mt-2">
         <div className="flex items-center gap-2 ml-1">
           <div
@@ -26,7 +26,7 @@ export function TicketColumn({ column, onAddTicket }: TicketColumnProps) {
         </div>
       </div>
 
-      <div className="space-y-">
+      <div className="space-y-3">
         {column.tickets.map((ticket: Ticket) => (
           <TicketCard key={ticket.id} ticket={ticket} />
         ))}

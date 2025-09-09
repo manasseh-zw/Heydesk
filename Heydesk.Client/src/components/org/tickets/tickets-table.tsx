@@ -24,8 +24,10 @@ import {
   CircleXIcon,
   Columns3Icon,
   EllipsisIcon,
+  EyeIcon,
   FilterIcon,
   ListFilterIcon,
+  XIcon,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -36,7 +38,10 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -66,17 +71,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { type Row } from "@tanstack/react-table";
+import { useStore } from "@tanstack/react-store";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { authState } from "@/lib/state/auth.state";
+import { getTickets } from "@/lib/services/tickets.service";
+import {
+  AssignedEntityType,
+  type AssignedToInfo,
+  type GetTicketsResponse,
+  type Ticket,
+} from "@/lib/types/ticket";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import BoringAvatar from "boring-avatars";
 
-// Ticket type aligned to backend TicketModel core props
-export type TicketRow = {
-  id: string;
-  subject: string;
-  context?: string | null;
-  status: "Open" | "Escalated" | "Closed";
-  openedAt: string; // ISO
-  closedAt?: string | null; // ISO
-  assignedTo?: string; // Guid string, placeholder display for now
-};
+type TicketRow = Ticket;
 
 const searchFilterFn: FilterFn<TicketRow> = (row, _columnId, filterValue) => {
   const haystack =
@@ -93,6 +102,58 @@ const statusFilterFn: FilterFn<TicketRow> = (
   if (!filterValue?.length) return true;
   const status = row.getValue(columnId) as string;
   return filterValue.includes(status);
+};
+
+const getAssigneeCell = (assigned?: AssignedToInfo | null) => {
+  if (!assigned) return <span className="text-muted-foreground">—</span>;
+  const initial = assigned.name?.charAt(0)?.toUpperCase() ?? "?";
+  const typeBadge =
+    assigned.type === AssignedEntityType.HumanAgent ? (
+      <span className="text-xs text-muted-foreground">Human</span>
+    ) : (
+      <span className="text-xs text-muted-foreground">AI</span>
+    );
+  const colors = ["#0ea5e9", "#22c55e", "#f59e0b", "#6366f1", "#ec4899"];
+  let avatarEl;
+  if (assigned.type === AssignedEntityType.HumanAgent) {
+    if (assigned.avatarUrl) {
+      avatarEl = (
+        <Avatar className="size-6">
+          <AvatarImage src={assigned.avatarUrl} alt={assigned.name} />
+          <AvatarFallback className="text-[10px]">{initial}</AvatarFallback>
+        </Avatar>
+      );
+    } else {
+      avatarEl = (
+        <BoringAvatar
+          name={assigned.name || assigned.id}
+          size={24}
+          variant="beam"
+          colors={colors}
+        />
+      );
+    }
+  } else {
+    avatarEl = (
+      <BoringAvatar
+        name={assigned.name || assigned.id}
+        size={24}
+        variant="marble"
+        colors={colors}
+      />
+    );
+  }
+  return (
+    <div className="flex items-center gap-2">
+      {avatarEl}
+      <div className="flex flex-col leading-tight">
+        <span className="truncate max-w-[22ch]" title={assigned.name}>
+          {assigned.name}
+        </span>
+        {typeBadge}
+      </div>
+    </div>
+  );
 };
 
 const columns: ColumnDef<TicketRow>[] = [
@@ -122,7 +183,7 @@ const columns: ColumnDef<TicketRow>[] = [
             " inline-block h-2 w-2 rounded-full",
             row.original.status === "Open" && "bg-blue-500",
             row.original.status === "Escalated" && "bg-yellow-500",
-            row.original.status === "Closed" && "bg-green-500"
+            row.original.status === "Closed" && "bg-lime-500"
           )}
         />
         {row.original.status}
@@ -130,6 +191,12 @@ const columns: ColumnDef<TicketRow>[] = [
     ),
     size: 120,
     filterFn: statusFilterFn,
+  },
+  {
+    header: "Assignee",
+    accessorKey: "assignedTo",
+    cell: ({ row }) => getAssigneeCell(row.original.assignedTo),
+    size: 220,
   },
   {
     header: "Opened",
@@ -147,26 +214,9 @@ const columns: ColumnDef<TicketRow>[] = [
     size: 200,
   },
   {
-    header: "Assignee",
-    accessorKey: "assignedTo",
-    cell: ({ row }) => row.original.assignedTo?.slice(0, 8) ?? "—",
-    size: 140,
-  },
-  {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
-    cell: () => (
-      <div className="flex justify-end">
-        <Button
-          size="icon"
-          variant="ghost"
-          className="shadow-none"
-          aria-label="Actions"
-        >
-          <EllipsisIcon size={16} aria-hidden="true" />
-        </Button>
-      </div>
-    ),
+    cell: ({ row }) => <TicketRowActions row={row} />,
     size: 60,
     enableHiding: false,
   },
@@ -184,42 +234,28 @@ export default function TicketsTable() {
     pageSize: 10,
   });
   const inputRef = useRef<HTMLInputElement>(null);
-
   const [data, setData] = useState<TicketRow[]>([]);
 
+  const { organization } = useStore(authState);
+  const orgId = organization?.id;
+  const currentPage = pagination.pageIndex + 1;
+  const pageSize = pagination.pageSize;
+
+  const query = useQuery<GetTicketsResponse, Error>({
+    queryKey: ["tickets", orgId, { page: currentPage, pageSize }],
+    queryFn: () =>
+      orgId
+        ? getTickets(orgId, { page: currentPage, pageSize })
+        : Promise.resolve({ tickets: [], totalCount: 0 }),
+    enabled: !!orgId,
+    placeholderData: keepPreviousData,
+  });
+
   useEffect(() => {
-    // placeholder rows
-    const placeholders: TicketRow[] = [
-      {
-        id: crypto.randomUUID(),
-        subject: "Customer cannot log in",
-        context: "User reports invalid credentials despite correct password",
-        status: "Open",
-        openedAt: new Date().toISOString(),
-        closedAt: null,
-        assignedTo: "11111111-1111-1111-1111-111111111111",
-      },
-      {
-        id: crypto.randomUUID(),
-        subject: "Payment gateway timeout",
-        context: "Intermittent 504 when creating charges",
-        status: "Escalated",
-        openedAt: new Date(Date.now() - 86400000).toISOString(),
-        closedAt: null,
-        assignedTo: "22222222-2222-2222-2222-222222222222",
-      },
-      {
-        id: crypto.randomUUID(),
-        subject: "Typo in onboarding email",
-        context: "Minor copy fix",
-        status: "Closed",
-        openedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-        closedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-        assignedTo: undefined,
-      },
-    ];
-    setData(placeholders);
-  }, []);
+    if (query.data) {
+      setData(query.data.tickets);
+    }
+  }, [query.data]);
 
   const table = useReactTable({
     data,
@@ -449,7 +485,25 @@ export default function TicketsTable() {
             ))}
           </TableHeader>
           <TableBody className="p-3">
-            {table.getRowModel().rows?.length ? (
+            {query.isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  Loading tickets...
+                </TableCell>
+              </TableRow>
+            ) : query.isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  {(query.error as Error).message || "Failed to load tickets."}
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -531,7 +585,7 @@ export default function TicketsTable() {
           </p>
         </div>
 
-        <div className="px-2">
+        <div className="">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
@@ -587,5 +641,51 @@ export default function TicketsTable() {
         </div>
       </div>
     </div>
+  );
+}
+
+function TicketRowActions({ row }: { row: Row<TicketRow> }) {
+  const handleView = () => {
+    console.log("View ticket:", row.original.id);
+  };
+
+  const handleMarkAsClosed = () => {
+    console.log("Mark ticket as closed:", row.original.id);
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <div className="flex justify-end">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="shadow-none"
+            aria-label="Actions"
+          >
+            <EllipsisIcon size={16} aria-hidden="true" />
+          </Button>
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={handleView}>
+            <EyeIcon size={16} className="mr-2" />
+            View
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        {row.original.status !== "Closed" && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={handleMarkAsClosed}>
+                <XIcon size={16} className="mr-2" />
+                Mark as Closed
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

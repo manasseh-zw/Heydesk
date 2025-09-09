@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ChartAreaInteractive } from "@/components/org/dashboard/chart-area-interactive";
-import { ChartBarMixed } from "@/components/org/dashboard/chart-bar-mixed";
-import { ChartPieDonut } from "@/components/org/dashboard/chart-pie-donut";
 import { SectionCards } from "@/components/org/dashboard/section-cards";
 
 export const Route = createFileRoute("/$org/")({
@@ -14,15 +12,6 @@ function RouteComponent() {
       <SectionCards />
       <div className="px-4 lg:px-6">
         <ChartAreaInteractive />
-      </div>
-      {/* <DataTable data={data} /> */}
-      <div className="flex gap-4 px-4 lg:px-6">
-        <div className="basis-1/2">
-          <ChartPieDonut />
-        </div>
-        <div className="basis-1/2">
-          <ChartBarMixed />
-        </div>
       </div>
     </div>
   );

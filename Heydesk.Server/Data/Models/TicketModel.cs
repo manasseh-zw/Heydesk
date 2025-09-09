@@ -13,10 +13,10 @@ public class TicketModel
     public DateTime? ClosedAt { get; set; }
 
     public Guid OrganizationId { get; set; }
-    public required OrganizationModel Organization { get; set; }
+    public OrganizationModel Organization { get; set; }
 
     public Guid CustomerId { get; set; }
-    public required CustomerModel Customer { get; set; }
+    public CustomerModel Customer { get; set; }
 
     public Guid AssignedTo { get; set; }
 

@@ -16,7 +16,11 @@ import {
   CircleXIcon,
   Columns3Icon,
   EllipsisIcon,
+  FileTextIcon,
+  GlobeIcon,
   ListFilterIcon,
+  TrashIcon,
+  TypeIcon,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -26,6 +30,8 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -41,12 +47,14 @@ import {
 import {
   type Document,
   DocumentIngestStatus,
+  DocumentType,
   type GetDocumentsResponse,
 } from "@/lib/types/document";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useStore } from "@tanstack/react-store";
 import { authState } from "@/lib/state/auth.state";
 import { getDocuments } from "@/lib/services/documents.service";
+import { type Row } from "@tanstack/react-table";
 
 type DocumentRow = Document;
 
@@ -57,30 +65,75 @@ const searchFilterFn: FilterFn<DocumentRow> = (row, _columnId, filterValue) => {
   return haystack.includes(needle);
 };
 
-const statusBadgeClass = (status: DocumentIngestStatus) =>
-  cn(
-    "inline-flex items-center rounded px-2 py-0.5 text-xs font-medium",
-    status === DocumentIngestStatus.Pending && "bg-muted text-foreground",
-    status === DocumentIngestStatus.Processing &&
-      "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200",
-    status === DocumentIngestStatus.Completed &&
-      "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200",
-    status === DocumentIngestStatus.Failed &&
-      "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200"
+const getStatusBadge = (status: DocumentIngestStatus) => {
+  const getStatusDot = (status: DocumentIngestStatus) => {
+    switch (status) {
+      case DocumentIngestStatus.Pending:
+        return "bg-amber-500";
+      case DocumentIngestStatus.Processing:
+        return "bg-blue-500";
+      case DocumentIngestStatus.Completed:
+        return "bg-lime-500";
+      case DocumentIngestStatus.Failed:
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  return (
+    <Badge variant="outline" className="gap-1.5">
+      <span
+        className={`size-1.5 rounded-full ${getStatusDot(status)}`}
+        aria-hidden="true"
+      ></span>
+      {status}
+    </Badge>
   );
+};
+
+const getDocumentTypeIcon = (type: DocumentType) => {
+  switch (type) {
+    case DocumentType.Url:
+      return <GlobeIcon size={16} />;
+    case DocumentType.Document:
+      return <FileTextIcon size={16} />;
+    case DocumentType.Text:
+      return <TypeIcon size={16} />;
+    default:
+      return null;
+  }
+};
+
+const extractWebsiteName = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+};
 
 const columns: ColumnDef<DocumentRow>[] = [
   {
     header: "Name",
     accessorKey: "name",
-    cell: ({ row }) => (
-      <div
-        className="font-medium truncate max-w-[28ch]"
-        title={row.original.name}
-      >
-        {row.original.name}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const { name, type, sourceUrl } = row.original;
+      const displayName =
+        type === DocumentType.Url && sourceUrl
+          ? extractWebsiteName(sourceUrl)
+          : name;
+
+      return (
+        <div className="flex items-center gap-2">
+          {getDocumentTypeIcon(type)}
+          <div className="font-medium truncate max-w-[28ch]" title={name}>
+            {displayName}
+          </div>
+        </div>
+      );
+    },
     size: 260,
     filterFn: searchFilterFn,
     enableHiding: false,
@@ -88,47 +141,51 @@ const columns: ColumnDef<DocumentRow>[] = [
   {
     header: "Type",
     accessorKey: "type",
-    cell: ({ row }) => <Badge variant="secondary">{row.original.type}</Badge>,
+    cell: ({ row }) => <Badge variant="outline">{row.original.type}</Badge>,
     size: 120,
   },
   {
     header: "Source",
     accessorKey: "sourceUrl",
-    cell: ({ row }) => (
-      <div
-        className="truncate max-w-[36ch]"
-        title={row.original.sourceUrl ?? undefined}
-      >
-        {row.original.sourceUrl ?? "—"}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const { sourceUrl, type } = row.original;
+
+      if (type === DocumentType.Url && sourceUrl) {
+        return (
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[36ch] block"
+            title={sourceUrl}
+          >
+            {sourceUrl}
+          </a>
+        );
+      }
+
+      if (type === DocumentType.Document) {
+        return <Badge variant="outline">Uploaded</Badge>;
+      }
+
+      if (type === DocumentType.Text) {
+        return <Badge variant="outline">Text Content</Badge>;
+      }
+
+      return <span className="text-muted-foreground">—</span>;
+    },
     size: 360,
   },
   {
     header: "Status",
     accessorKey: "status",
-    cell: ({ row }) => (
-      <span className={statusBadgeClass(row.original.status)}>
-        {row.original.status}
-      </span>
-    ),
+    cell: ({ row }) => getStatusBadge(row.original.status),
     size: 140,
   },
   {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
-    cell: () => (
-      <div className="flex justify-end">
-        <Button
-          size="icon"
-          variant="ghost"
-          className="shadow-none"
-          aria-label="Actions"
-        >
-          <EllipsisIcon size={16} aria-hidden="true" />
-        </Button>
-      </div>
-    ),
+    cell: ({ row }) => <DocumentRowActions row={row} />,
     size: 60,
     enableHiding: false,
   },
@@ -328,5 +385,39 @@ export default function DocumentsTable() {
         </Table>
       </div>
     </div>
+  );
+}
+
+function DocumentRowActions({ row }: { row: Row<DocumentRow> }) {
+  const handleDelete = () => {
+    console.log("Delete document:", row.original.id);
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <div className="flex justify-end">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="shadow-none"
+            aria-label="Actions"
+          >
+            <EllipsisIcon size={16} aria-hidden="true" />
+          </Button>
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={handleDelete}
+          >
+            <TrashIcon size={16} className="mr-2" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
