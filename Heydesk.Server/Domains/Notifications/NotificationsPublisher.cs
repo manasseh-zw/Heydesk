@@ -11,18 +11,18 @@ public class NotificationsPublisher : INotificationsPublisher
         _hub = hub;
     }
 
-    public Task PublishToOrganizationAsync<T>(
+    public Task PublishToOrganizationAsync(
         Guid organizationId,
-        Notification<T> notification,
+        SimpleNotification notification,
         CancellationToken ct = default
     )
     {
         return _hub.Clients.Group($"org:{organizationId}").Notify(notification);
     }
 
-    public Task PublishToUserAsync<T>(
+    public Task PublishToUserAsync(
         Guid userId,
-        Notification<T> notification,
+        SimpleNotification notification,
         CancellationToken ct = default
     )
     {

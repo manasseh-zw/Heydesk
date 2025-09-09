@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Heydesk.Server.Config;
 using Heydesk.Server.Data.Models;
 using Heydesk.Server.Domains.Document.Workflows;
@@ -13,7 +14,10 @@ builder.Services.AddOpenApi();
 builder.Services.ConfigureDatabase();
 builder.Services.ConfigureAuthentication();
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    }); ;
 
 builder.Services.AddSingleton<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
 

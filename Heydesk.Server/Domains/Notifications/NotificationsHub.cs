@@ -17,6 +17,16 @@ public class NotificationsHub : Hub<INotificationsClient>
 
         await base.OnConnectedAsync();
     }
+
+    public Task JoinOrganization(Guid organizationId)
+    {
+        return Groups.AddToGroupAsync(Context.ConnectionId, $"org:{organizationId}");
+    }
+
+    public Task LeaveOrganization(Guid organizationId)
+    {
+        return Groups.RemoveFromGroupAsync(Context.ConnectionId, $"org:{organizationId}");
+    }
 }
 
 

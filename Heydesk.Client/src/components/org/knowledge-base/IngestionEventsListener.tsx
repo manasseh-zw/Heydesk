@@ -3,34 +3,57 @@ import { useStore } from "@tanstack/react-store";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { authState } from "@/lib/state/auth.state";
-import { subscribeToIngestion } from "@/lib/services/documents.service";
-import { DocumentIngestStatus } from "@/lib/types/document";
+import { notifications } from "@/lib/services/notifications.service";
+import { NotificationType } from "@/lib/types/notifications";
 
 export default function IngestionEventsListener() {
   const { organization } = useStore(authState);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!organization?.id) return;
+    let off: (() => void) | null = null;
+    let joined = false;
+    const start = async () => {
+      if (!organization?.id) return;
+      await notifications.start();
+      try {
+        // join org group
+        // call server hub method
+        // @ts-ignore - we access underlying connection to invoke
+        await (notifications as any).connection?.invoke(
+          "JoinOrganization",
+          organization.id
+        );
+        joined = true;
+      } catch {}
 
-    const unsubscribe = subscribeToIngestion(organization.id, (evt) => {
-      const status = evt.status;
-      if (status === DocumentIngestStatus.Pending) {
-        toast("Starting document ingestion");
-      } else if (status === DocumentIngestStatus.Processing) {
-        toast.info("Document ingestion in progress");
-      } else if (status === DocumentIngestStatus.Completed) {
-        toast.success("Document ingested successfully");
-      } else if (status === DocumentIngestStatus.Failed) {
-        toast.error("Document ingestion failed");
-      }
+      off = notifications.on(NotificationType.DocumentIngestionUpdated, (n) => {
+        console.log("Document ingestion updated", n);
 
-      queryClient.invalidateQueries({
-        queryKey: ["documents", organization.id],
+        const status = n.payload.status;
+        if (status === "Pending") toast("Starting document ingestion");
+        else if (status === "Processing")
+          toast.info("Document ingestion in progress");
+        else if (status === "Completed")
+          toast.success("Document ingested successfully");
+        else if (status === "Failed") toast.error("Document ingestion failed");
+
+        queryClient.invalidateQueries({
+          queryKey: ["documents", organization.id],
+        });
       });
-    });
+    };
+    start();
 
-    return () => unsubscribe();
+    return () => {
+      if (off) off();
+      if (joined) {
+        // @ts-ignore
+        (notifications as any).connection
+          ?.invoke("LeaveOrganization", organization?.id)
+          .catch(() => {});
+      }
+    };
   }, [organization?.id, queryClient]);
 
   return null;

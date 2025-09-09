@@ -3,6 +3,7 @@ using Heydesk.Server.Data.Models;
 using Heydesk.Server.Utils;
 using Heydesk.Server.Domains.Document;
 using Heydesk.Server.Domains.Document.Workflows;
+using Heydesk.Server.Domains.Notifications;
 
 namespace Heydesk.Server.Domains.Document.Workflows;
 
@@ -18,16 +19,19 @@ public class DocumentsEvents : IDocumentsEvents
     private readonly RepositoryContext _repository;
     private readonly IDocumentIngestEventsQueue<DocumentIngestEvent> _queue;
     private readonly ILogger<DocumentsEvents> _logger;
+    private readonly INotificationsPublisher _notifications;
 
     public DocumentsEvents(
         RepositoryContext repository,
         IDocumentIngestEventsQueue<DocumentIngestEvent> queue,
-        ILogger<DocumentsEvents> logger
+        ILogger<DocumentsEvents> logger,
+        INotificationsPublisher notifications
     )
     {
         _repository = repository;
         _queue = queue;
         _logger = logger;
+        _notifications = notifications;
     }
 
     public async Task<Result<GetDocumentResponse>> EnqueueUrl(Guid organizationId, string url)
@@ -53,6 +57,15 @@ public class DocumentsEvents : IDocumentsEvents
                     organizationId,
                     IngestEventType.Url,
                     Url: url
+                )
+            );
+
+            await _notifications.PublishToOrganizationAsync(
+                organizationId,
+                new SimpleNotification(
+                    "Document ingestion started",
+                    $"Queued ingestion for '{document.Name}'.",
+                    DateTimeOffset.UtcNow
                 )
             );
 
@@ -100,6 +113,15 @@ public class DocumentsEvents : IDocumentsEvents
                 )
             );
 
+            await _notifications.PublishToOrganizationAsync(
+                organizationId,
+                new SimpleNotification(
+                    "Document ingestion started",
+                    $"Queued ingestion for '{document.Name}'.",
+                    DateTimeOffset.UtcNow
+                )
+            );
+
             return Result.Ok(
                 new GetDocumentResponse(
                     document.Id,
@@ -141,6 +163,15 @@ public class DocumentsEvents : IDocumentsEvents
                     organizationId,
                     IngestEventType.Document,
                     FileContent: fileBytes
+                )
+            );
+
+            await _notifications.PublishToOrganizationAsync(
+                organizationId,
+                new SimpleNotification(
+                    "Document ingestion started",
+                    $"Queued ingestion for '{document.Name}'.",
+                    DateTimeOffset.UtcNow
                 )
             );
 

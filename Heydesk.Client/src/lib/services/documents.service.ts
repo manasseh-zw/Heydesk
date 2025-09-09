@@ -6,7 +6,6 @@ import type {
   IngestDocumentRequest,
   IngestTextRequest,
   IngestUrlRequest,
-  IngestionSseEvent,
 } from "@/lib/types/document";
 import { queryOptions } from "@tanstack/react-query";
 
@@ -77,31 +76,6 @@ export const ingestDocument = async (
 };
 
 // SSE subscription for ingestion status updates
-export const subscribeToIngestion = (
-  organizationId: string,
-  onEvent: (evt: IngestionSseEvent) => void
-): (() => void) => {
-  const url = new URL(
-    `/api/organizations/${organizationId}/documents/ingest/stream`,
-    window.location.origin
-  );
-  const evtSource = new EventSource(url.toString(), { withCredentials: true });
-
-  evtSource.onmessage = (e) => {
-    try {
-      const data = JSON.parse(e.data) as IngestionSseEvent;
-      onEvent(data);
-    } catch (_err) {
-      // ignore malformed events
-    }
-  };
-
-  evtSource.onerror = () => {
-    // Let caller decide to resubscribe if needed
-    evtSource.close();
-  };
-
-  return () => evtSource.close();
-};
+// SSE removed in favor of SignalR notifications
 
 

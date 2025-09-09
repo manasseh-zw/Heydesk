@@ -1,5 +1,6 @@
 using Heydesk.Server.Data.Models;
 using Heydesk.Server.Domains.Document.Processors;
+using Heydesk.Server.Domains.Notifications;
 
 namespace Heydesk.Server.Domains.Document.Workflows;
 
@@ -10,13 +11,15 @@ public class DocumentIngestEventHandler
     private readonly IUrlProcessor _urlProcessor;
     private readonly IDocProcessor _docProcessor;
     private readonly ILogger<DocumentIngestEventHandler> _logger;
+    private readonly INotificationsPublisher _notifications;
 
     public DocumentIngestEventHandler(
         Data.RepositoryContext repository,
         Data.IVectorStore vectorStore,
         IUrlProcessor urlProcessor,
         IDocProcessor docProcessor,
-        ILogger<DocumentIngestEventHandler> logger
+        ILogger<DocumentIngestEventHandler> logger,
+        INotificationsPublisher notifications
     )
     {
         _repository = repository;
@@ -24,6 +27,7 @@ public class DocumentIngestEventHandler
         _urlProcessor = urlProcessor;
         _docProcessor = docProcessor;
         _logger = logger;
+        _notifications = notifications;
     }
 
     public async Task HandleIngestAsync(DocumentIngestEvent ingestEvent, CancellationToken ct)
@@ -42,6 +46,14 @@ public class DocumentIngestEventHandler
         {
             document.Status = DocumentIngestStatus.Processing;
             await _repository.SaveChangesAsync(ct);
+            await _notifications.PublishToOrganizationAsync(
+                document.OrganizationId,
+                new SimpleNotification(
+                    "Document ingestion in progress",
+                    $"Ingesting '{document.Name}'.",
+                    DateTimeOffset.UtcNow
+                )
+            );
 
             string content = ingestEvent.Type switch
             {
@@ -65,6 +77,14 @@ public class DocumentIngestEventHandler
 
             document.Status = DocumentIngestStatus.Completed;
             await _repository.SaveChangesAsync(ct);
+            await _notifications.PublishToOrganizationAsync(
+                document.OrganizationId,
+                new SimpleNotification(
+                    "Document ingested successfully",
+                    $"Completed ingestion for '{document.Name}'.",
+                    DateTimeOffset.UtcNow
+                )
+            );
 
         }
         catch (Exception ex)
@@ -72,6 +92,14 @@ public class DocumentIngestEventHandler
             _logger.LogError(ex, "Failed to ingest document {DocumentId}", ingestEvent.DocumentId);
             document.Status = DocumentIngestStatus.Failed;
             await _repository.SaveChangesAsync(ct);
+            await _notifications.PublishToOrganizationAsync(
+                document.OrganizationId,
+                new SimpleNotification(
+                    "Document ingestion failed",
+                    $"Failed to ingest '{document.Name}'.",
+                    DateTimeOffset.UtcNow
+                )
+            );
 
         }
     }
