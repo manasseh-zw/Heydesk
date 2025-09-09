@@ -1,6 +1,7 @@
 using Heydesk.Server.Config;
 using Heydesk.Server.Data.Models;
 using Heydesk.Server.Domains.Document.Workflows;
+using Heydesk.Server.Domains.Notifications;
 using Heydesk.Server.Extensions;
 using Microsoft.AspNetCore.Identity;
 
@@ -18,6 +19,7 @@ builder.Services.AddSingleton<IPasswordHasher<UserModel>, PasswordHasher<UserMod
 
 // Configure all domain services
 builder.Services.ConfigureDomainServices();
+builder.Services.ConfigureSignalR();
 
 builder.Services.AddCors(options =>
 {
@@ -53,8 +55,9 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers().RequireAuthorization();
+app.MapHub<NotificationsHub>("/hubs/notifications").RequireAuthorization();
 
-// SSE endpoint is exposed via DocumentsController
+// Notifications hub exposed at /hubs/notifications
 
 app.UseExceptionHandler(options => { });
 

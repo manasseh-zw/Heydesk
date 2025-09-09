@@ -11,6 +11,7 @@ using Heydesk.Server.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Heydesk.Server.Domains.Notifications;
 using Heydesk.Server.Domains.Agent;
 
 namespace Heydesk.Server.Extensions;
@@ -108,7 +109,8 @@ public static class ServiceExtensions
 
     public static IServiceCollection ConfigureSignalR(this IServiceCollection services)
     {
-        // Placeholder: SignalR will be configured next
+        services.AddSignalR();
+        services.AddSingleton<INotificationsPublisher, NotificationsPublisher>();
         return services;
     }
 }
