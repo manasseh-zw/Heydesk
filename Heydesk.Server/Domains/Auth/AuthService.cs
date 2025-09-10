@@ -17,24 +17,32 @@ public interface IAuthService
     Task<Result<AuthResponse>> EmailSignIn(EmailSignInRequest request);
     Task<Result<AuthResponse>> GoogleAuth(GoogleAuthRequest request);
     Task<Result<UserDataResponse>> GetUserData(Guid userId);
+
+    // Customer Auth Methods
+    Task<Result<CustomerAuthResponse>> CustomerSignUp(CustomerSignUpRequest request);
+    Task<Result<CustomerAuthResponse>> CustomerSignIn(CustomerSignInRequest request);
+    Task<Result<CustomerDataResponse>> GetCustomerData(Guid customerId);
 }
 
 public class AuthService : IAuthService
 {
     private readonly RepositoryContext _repository;
     private readonly IPasswordHasher<UserModel> _passwordHasher;
+    private readonly IPasswordHasher<CustomerModel> _customerPasswordHasher;
     private readonly ITokenManager _tokenManager;
     private readonly IHttpClientFactory _httpClientFactory;
 
     public AuthService(
         RepositoryContext repository,
         IPasswordHasher<UserModel> passwordHasher,
+        IPasswordHasher<CustomerModel> customerPasswordHasher,
         ITokenManager tokenManager,
         IHttpClientFactory httpClientFactory
     )
     {
         _repository = repository;
         _passwordHasher = passwordHasher;
+        _customerPasswordHasher = customerPasswordHasher;
         _tokenManager = tokenManager;
         _httpClientFactory = httpClientFactory;
     }
@@ -268,5 +276,108 @@ public class AuthService : IAuthService
         );
 
         return Result.Ok(new AuthResponse(token, userData));
+    }
+
+    // Customer Auth Methods
+    public async Task<Result<CustomerAuthResponse>> CustomerSignUp(CustomerSignUpRequest request)
+    {
+        var isEmailTaken = await _repository.Customers.AnyAsync(c => c.Email == request.Email);
+        if (isEmailTaken)
+            return Result.Fail("Email already exists");
+
+        var validationResult = new AuthValidator().Validate(request);
+
+        if (!validationResult.IsValid)
+            return Result.Fail([.. validationResult.Errors.Select(e => e.ErrorMessage)]);
+
+        var customer = new CustomerModel()
+        {
+            Username = request.Username,
+            Email = request.Email,
+            AuthProvider = AuthProvider.Email,
+        };
+
+        customer.PasswordHash = _customerPasswordHasher.HashPassword(customer, request.Password);
+
+        await _repository.Customers.AddAsync(customer);
+        await _repository.SaveChangesAsync();
+
+        var token = _tokenManager.GenerateCustomerToken(customer);
+        var customerData = new CustomerDataResponse(
+            customer.Id,
+            customer.Email,
+            customer.Username,
+            customer.AvatarUrl,
+            customer.CreatedAt,
+            customer.AuthProvider,
+            customer.Organizations
+        );
+
+        return Result.Ok(new CustomerAuthResponse(token, customerData));
+    }
+
+    public async Task<Result<CustomerAuthResponse>> CustomerSignIn(CustomerSignInRequest request)
+    {
+        var validationResult = new SignInValidator().Validate(request);
+        if (!validationResult.IsValid)
+            return Result.Fail([.. validationResult.Errors.Select(e => e.ErrorMessage)]);
+
+        // Check if the identifier is an email or username
+        var customer = await _repository.Customers
+            .FirstOrDefaultAsync(c =>
+                c.Email == request.UserIdentifier || c.Username == request.UserIdentifier
+            );
+
+        if (customer == null)
+            return Result.Fail("Invalid credentials");
+
+        if (customer.AuthProvider != AuthProvider.Email)
+            return Result.Fail($"Please sign in with {customer.AuthProvider.GetDisplayName()}");
+
+        // Verify password
+        var passwordVerificationResult = _customerPasswordHasher.VerifyHashedPassword(
+            customer,
+            customer.PasswordHash,
+            request.Password
+        );
+
+        if (passwordVerificationResult == PasswordVerificationResult.Failed)
+            return Result.Fail("Invalid credentials");
+
+        var token = _tokenManager.GenerateCustomerToken(customer);
+        var customerData = new CustomerDataResponse(
+            customer.Id,
+            customer.Email,
+            customer.Username,
+            customer.AvatarUrl,
+            customer.CreatedAt,
+            customer.AuthProvider,
+            customer.Organizations
+        );
+
+        return Result.Ok(new CustomerAuthResponse(token, customerData));
+    }
+
+    public async Task<Result<CustomerDataResponse>> GetCustomerData(Guid customerId)
+    {
+        var customer = await _repository.Customers
+            .FirstOrDefaultAsync(c => c.Id == customerId);
+
+        if (customer == null)
+        {
+            return Result.Fail("Customer not found");
+        }
+
+        var response = new CustomerDataResponse(
+            customer.Id,
+            customer.Email,
+            customer.Username,
+            customer.AvatarUrl,
+            customer.CreatedAt,
+            customer.AuthProvider,
+            customer.Organizations
+        );
+
+        return Result.Ok(response);
     }
 }

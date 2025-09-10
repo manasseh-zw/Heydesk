@@ -25,6 +25,23 @@ public class AuthContracts
         GetOrgResponse? Organization
     );
 
+    // Customer Auth Contracts
+    public record CustomerSignUpRequest(string Username, string Email, string Password);
+
+    public record CustomerSignInRequest(string UserIdentifier, string Password);
+
+    public record CustomerAuthResponse(string Token, CustomerDataResponse CustomerData);
+
+    public record CustomerDataResponse(
+        Guid Id,
+        string Email,
+        string Username,
+        string? AvatarUrl,
+        DateTime CreatedAt,
+        AuthProvider AuthProvider,
+        List<string> Organizations
+    );
+
     public class GoogleUserInfo
     {
         [JsonPropertyName("sub")]

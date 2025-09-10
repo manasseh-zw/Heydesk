@@ -68,10 +68,64 @@ public class AuthController : ControllerBase
         return Unauthorized("User not authenticated");
     }
 
+    // Customer Auth Endpoints
+    [HttpPost("support/sign-up")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CustomerSignUp([FromBody] CustomerSignUpRequest request)
+    {
+        var result = await _authService.CustomerSignUp(request);
+
+        if (!result.Success)
+            return BadRequest(result.Errors);
+
+        SetCustomerAuthCookie(HttpContext, result.Data!.Token);
+        return Ok(result.Data.CustomerData);
+    }
+
+    [HttpPost("support/sign-in")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CustomerSignIn([FromBody] CustomerSignInRequest request)
+    {
+        var result = await _authService.CustomerSignIn(request);
+
+        if (!result.Success)
+            return BadRequest(result.Errors);
+
+        SetCustomerAuthCookie(HttpContext, result.Data!.Token);
+        return Ok(result.Data.CustomerData);
+    }
+
+    [HttpGet("support/me")]
+    [Authorize]
+    public async Task<IActionResult> GetCustomerData()
+    {
+        if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var customerId))
+        {
+            var result = await _authService.GetCustomerData(customerId);
+            return result.Success ? Ok(result.Data) : BadRequest(result.Errors);
+        }
+        return Unauthorized("Customer not authenticated");
+    }
+
     private static void SetAuthCookie(HttpContext httpContext, string token)
     {
         httpContext.Response.Cookies.Append(
             Constants.AccessTokenCookieName,
+            token,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddDays(14),
+            }
+        );
+    }
+
+    private static void SetCustomerAuthCookie(HttpContext httpContext, string token)
+    {
+        httpContext.Response.Cookies.Append(
+            Constants.CustomerAccessTokenCookieName,
             token,
             new CookieOptions
             {

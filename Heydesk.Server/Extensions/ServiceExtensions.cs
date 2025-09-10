@@ -1,6 +1,7 @@
 using System.Text;
 using Heydesk.Server.Config;
 using Heydesk.Server.Data;
+using Heydesk.Server.Data.Models;
 using Heydesk.Server.Domains.Auth;
 using Heydesk.Server.Domains.Document;
 using Heydesk.Server.Domains.Document.Workflows;
@@ -14,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using Heydesk.Server.Domains.Notifications;
 using Heydesk.Server.Domains.Agent;
 using Heydesk.Server.Domains.Ticket;
+using Microsoft.AspNetCore.Identity;
 
 namespace Heydesk.Server.Extensions;
 
@@ -78,6 +80,10 @@ public static class ServiceExtensions
 
     public static IServiceCollection ConfigureDomainServices(this IServiceCollection services)
     {
+        // Password hashers
+        services.AddScoped<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
+        services.AddScoped<IPasswordHasher<CustomerModel>, PasswordHasher<CustomerModel>>();
+
         // Auth services
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ITokenManager, TokenManager>();
