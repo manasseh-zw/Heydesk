@@ -103,19 +103,6 @@ public class DocumentService : IDocumentService
                 return Result.Fail("Only .pdf files are supported");
             }
 
-            var document = new DocumentModel
-            {
-                Id = Guid.CreateVersion7(),
-                Name = request.Name,
-                Type = DocumentType.Document,
-                OrganizationId = OrganizationId,
-                Status = DocumentIngestStatus.Pending,
-                SourceUrl = string.Empty,
-            };
-
-            _repository.Documents.Add(document);
-            await _repository.SaveChangesAsync();
-
             byte[] bytes;
             await using (var ms = new MemoryStream())
             {

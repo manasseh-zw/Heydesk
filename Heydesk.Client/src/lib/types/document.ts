@@ -47,11 +47,3 @@ export type IngestDocumentRequest = {
   file: File;
 };
 
-// SSE event from /ingest/stream
-export type IngestionSseEvent = {
-  organizationId: string;
-  documentId: string;
-  status: DocumentIngestStatus;
-};
-
-
