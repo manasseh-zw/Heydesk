@@ -21,6 +21,8 @@ import {
   TrashIcon,
 } from "lucide-react";
 import Avatar from "boring-avatars";
+import { useStore } from "@tanstack/react-store";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +48,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { authState } from "@/lib/state/auth.state";
+import {
+  getAgents,
+  type GetAgentsResponse,
+} from "@/lib/services/agents.service";
 
 type AgentRow = Agent;
 
@@ -123,29 +130,26 @@ export default function AgentsTable() {
   const [data, setData] = useState<AgentRow[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const { organization } = useStore(authState);
+  const orgId = organization?.id;
+  const currentPage = pagination.pageIndex + 1;
+  const pageSize = pagination.pageSize;
+
+  const query = useQuery<GetAgentsResponse, Error>({
+    queryKey: ["agents", orgId, { page: currentPage, pageSize }],
+    queryFn: () =>
+      orgId
+        ? getAgents(orgId, { page: currentPage, pageSize })
+        : Promise.resolve({ agents: [], totalCount: 0 }),
+    enabled: !!orgId,
+    placeholderData: keepPreviousData,
+  });
+
   useEffect(() => {
-    const placeholders: AgentRow[] = [
-      {
-        id: crypto.randomUUID(),
-        organizationId: crypto.randomUUID(),
-        name: "Support Bot",
-        description: "Handles common customer queries",
-        systemPrompt: "Be helpful and concise",
-        type: AgentType.Chat,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: crypto.randomUUID(),
-        organizationId: crypto.randomUUID(),
-        name: "Voice Assistant",
-        description: "Phone IVR assistant",
-        systemPrompt: "Assist callers politely",
-        type: AgentType.Voice,
-        createdAt: new Date().toISOString(),
-      },
-    ];
-    setData(placeholders);
-  }, []);
+    if (query.data) {
+      setData(query.data.agents);
+    }
+  }, [query.data]);
 
   const table = useReactTable({
     data,
@@ -257,7 +261,25 @@ export default function AgentsTable() {
             ))}
           </TableHeader>
           <TableBody className="p-3">
-            {table.getRowModel().rows?.length ? (
+            {query.isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  Loading agents...
+                </TableCell>
+              </TableRow>
+            ) : query.isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  {(query.error as Error).message || "Failed to load agents."}
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}

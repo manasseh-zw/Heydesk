@@ -19,11 +19,11 @@ import { TrendingUp } from "lucide-react";
 export const description = "A pie chart with a label list";
 
 const chartData = [
-  { browser: "Open", visitors: 42, fill: "var(--color-chrome)" },
+  { browser: "Open", visitors: 42, fill: "#84CC16" },
   { browser: "Escalated", visitors: 7, fill: "var(--color-safari)" },
-  { browser: "Closed", visitors: 79, fill: "var(--color-firefox)" },
-  { browser: "Unassigned", visitors: 9, fill: "var(--color-edge)" },
-  { browser: "Other", visitors: 3, fill: "var(--color-other)" },
+  { browser: "Closed", visitors: 70, fill: "#FCA070" },
+  { browser: "Unassigned", visitors: 9, fill: "#2196f3" },
+  { browser: "Other", visitors: 12, fill: "#fca311" },
 ];
 
 const chartConfig = {

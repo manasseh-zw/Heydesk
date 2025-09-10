@@ -11,9 +11,9 @@ export const Route = createFileRoute("/$org/")({
 function RouteComponent() {
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-      <div className="flex justify-between items-center px-4 lg:px-6 ">
+      <div className="flex justify-between items-center px-4 lg:px-6 mb-2">
         <div className="ml-1">
-          <div className=" text-sm text-gray-500 mb-2 ">My Workspace</div>
+          <div className=" text-sm text-gray-500 mb-2">My Workspace</div>
           <h1 className="text-3xl ">Good evening, Manasseh</h1>
         </div>
         <div>

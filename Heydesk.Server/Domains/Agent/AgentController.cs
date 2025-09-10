@@ -23,6 +23,15 @@ public class AgentController : ControllerBase
             return BadRequest(result.Errors);
         return Ok(result.Data);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAgents([FromRoute] Guid organizationId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var result = await _agentService.GetAgents(organizationId, page, pageSize);
+        if (!result.Success)
+            return BadRequest(result.Errors);
+        return Ok(new { agents = result.Data, totalCount = result.Data.Count });
+    }
 }
 
 

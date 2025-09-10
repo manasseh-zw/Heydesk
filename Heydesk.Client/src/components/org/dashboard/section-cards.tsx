@@ -26,12 +26,7 @@ export function SectionCards() {
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Created last 30 days <TrendingUpIcon className="size-4" />
-          </div>
-          <div className="text-muted-foreground">
-            data synced with server soon
-          </div>
+          <div className="">data synced with server soon</div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
@@ -48,10 +43,7 @@ export function SectionCards() {
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Fewer backlog this week <TrendingDownIcon className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Focus on escalations next</div>
+          <div className="">Focus on escalations next</div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
@@ -68,10 +60,7 @@ export function SectionCards() {
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Escalations slightly up <TrendingUpIcon className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Route to human agents</div>
+          <div className="">Route to human agents</div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
@@ -88,10 +77,7 @@ export function SectionCards() {
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Faster vs last period <TrendingUpIcon className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Placeholder metric</div>
+          <div className="">Placeholder metric</div>
         </CardFooter>
       </Card>
     </div>
