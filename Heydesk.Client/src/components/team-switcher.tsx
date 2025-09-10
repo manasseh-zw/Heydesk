@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -52,6 +52,34 @@ export default function TeamSwitcher({
 }: TeamSwitcherProps) {
   const id = useId();
 
+  const OrgAvatar = ({ org }: { org: Organization }) => {
+    const [useIcon, setUseIcon] = useState(true);
+    let faviconUrl: string | undefined;
+    try {
+      const domain = new URL(org.url || "").hostname;
+      if (domain) faviconUrl = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+    } catch {
+      faviconUrl = undefined;
+    }
+    const initials = getInitials(org.name);
+    return (
+      <Square className="bg-white">
+        {useIcon && faviconUrl ? (
+          <img
+            src={faviconUrl}
+            alt={initials}
+            width={16}
+            height={16}
+            className="size-4"
+            onError={() => setUseIcon(false)}
+          />
+        ) : (
+          <span>{initials}</span>
+        )}
+      </Square>
+    );
+  };
+
   return (
     <div className="w-full *:not-first:mt-2 mb-1">
       <Select
@@ -75,9 +103,7 @@ export default function TeamSwitcher({
             </SelectLabel>
             {organizations.map((org) => (
               <SelectItem key={org.id} value={org.id}>
-                <Square className="bg-indigo-500 text-white">
-                  {getInitials(org.name)}
-                </Square>
+                <OrgAvatar org={org} />
                 <span className="truncate">{org.name}</span>
               </SelectItem>
             ))}

@@ -38,13 +38,13 @@ public class RepositoryContext(DbContextOptions<RepositoryContext> options) : Db
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(t => t.Customer)
-                .WithMany()
+                .WithMany(c => c.Tickets)
                 .HasForeignKey(t => t.CustomerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(t => t.Conversation)
                 .WithOne(c => c.Ticket)
-                .HasForeignKey<ConversationModel>(c => c.TicketId)
+                .HasForeignKey<TicketModel>(t => t.ConversationId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -55,8 +55,25 @@ public class RepositoryContext(DbContextOptions<RepositoryContext> options) : Db
         modelBuilder.Entity<ConversationModel>(entity =>
         {
             entity.ToTable("Conversations");
+
+            entity.HasOne(c => c.Customer)
+                .WithMany(c => c.Conversations)
+                .HasForeignKey(c => c.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.Organization)
+                .WithMany()
+                .HasForeignKey(c => c.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.Ticket)
+                .WithOne(t => t.Conversation)
+                .HasForeignKey<ConversationModel>(c => c.TicketId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             entity.HasMany(c => c.Messages)
                 .WithOne()
+                .HasForeignKey(m => m.ConversationId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -65,7 +82,20 @@ public class RepositoryContext(DbContextOptions<RepositoryContext> options) : Db
             entity.ToTable("Messages");
         });
 
-        modelBuilder.Entity<CustomerModel>().ToTable("Customers");
+        modelBuilder.Entity<CustomerModel>(entity =>
+        {
+            entity.ToTable("Customers");
+
+            entity.HasMany(c => c.Conversations)
+                .WithOne(conv => conv.Customer)
+                .HasForeignKey(conv => conv.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(c => c.Tickets)
+                .WithOne(t => t.Customer)
+                .HasForeignKey(t => t.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 
     public DbSet<UserModel> Users { get; set; }

@@ -13,14 +13,16 @@ public class TicketModel
     public DateTime? ClosedAt { get; set; }
 
     public Guid OrganizationId { get; set; }
-    public OrganizationModel Organization { get; set; }
+    public OrganizationModel Organization { get; set; } = null!;
 
     public Guid CustomerId { get; set; }
-    public CustomerModel Customer { get; set; }
+    public CustomerModel Customer { get; set; } = null!;
 
     public Guid AssignedTo { get; set; }
 
-    public ConversationModel? Conversation { get; set; }
+    // Required conversation (ticket is always created from a conversation)
+    public Guid ConversationId { get; set; }
+    public ConversationModel Conversation { get; set; } = null!;
 }
 
 public enum TicketStatus

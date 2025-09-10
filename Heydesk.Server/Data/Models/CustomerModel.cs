@@ -12,4 +12,8 @@ public class CustomerModel
     public AuthProvider AuthProvider { get; set; }
 
     public List<string> Organizations { get; set; } = [];
+
+    // Navigation properties
+    public List<ConversationModel> Conversations { get; set; } = [];
+    public List<TicketModel> Tickets { get; set; } = [];
 }
