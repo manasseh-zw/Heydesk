@@ -39,4 +39,5 @@ export const storage = {
 export const STORAGE_KEYS = {
   AUTH_STATE: 'heydesk_auth_state',
   CUSTOMER_AUTH_STATE: 'heydesk_customer_auth_state',
+  PENDING_SUPPORT_ORG_SLUG: 'heydesk_pending_support_org_slug',
 } as const;

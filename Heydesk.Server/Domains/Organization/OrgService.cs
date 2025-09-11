@@ -11,6 +11,7 @@ public interface IOrgService
 {
     Task<Result<GetOrgResponse>> CreateOrganization(Guid UserId, CreateOrgRequest request);
     Task<Result<GetMembersResponse>> GetMembers(Guid OrganizationId, GetMembersRequest request);
+    Task<Result<List<GetOrgResponse>>> SearchOrganizations(string query, int limit = 10);
 }
 
 public class OrgService : IOrgService
@@ -105,5 +106,48 @@ public class OrgService : IOrgService
 
         var response = new GetMembersResponse(members, totalCount);
         return Result.Ok(response);
+    }
+
+    public async Task<Result<List<GetOrgResponse>>> SearchOrganizations(string query, int limit = 10)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return Result.Ok(new List<GetOrgResponse>());
+        }
+
+        query = query.Trim();
+        var qLower = query.ToLower();
+
+        // Simple fuzzy-ish search: prioritize startswith, then contains
+        var matches = await _repository.Organizations
+            .Select(o => new
+            {
+                Org = o,
+                NameLower = o.Name.ToLower(),
+                SlugLower = o.Slug.ToLower()
+            })
+            .Select(x => new
+            {
+                x.Org,
+                Score =
+                    (x.SlugLower.StartsWith(qLower) ? 3 : 0) +
+                    (x.NameLower.StartsWith(qLower) ? 2 : 0) +
+                    (x.SlugLower.Contains(qLower) ? 1 : 0) +
+                    (x.NameLower.Contains(qLower) ? 1 : 0)
+            })
+            .Where(x => x.Score > 0)
+            .OrderByDescending(x => x.Score)
+            .ThenBy(x => x.Org.Name)
+            .Take(limit)
+            .Select(x => new GetOrgResponse(
+                x.Org.Id,
+                x.Org.Name,
+                x.Org.Slug,
+                x.Org.Url,
+                x.Org.IconUrl
+            ))
+            .ToListAsync();
+
+        return Result.Ok(matches);
     }
 }

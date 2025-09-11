@@ -45,7 +45,7 @@ public class TokenManager : ITokenManager
             new Claim(ClaimTypes.NameIdentifier, customer.Id.ToString()),
             new Claim(ClaimTypes.Email, customer.Email),
             new Claim(ClaimTypes.Name, customer.Username),
-            new Claim("user_type", "customer")
+            new Claim("user_type", "customer"),
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AppConfig.JwtOptions.Secret));

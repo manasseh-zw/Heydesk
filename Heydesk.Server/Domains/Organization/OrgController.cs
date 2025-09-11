@@ -46,4 +46,15 @@ public class OrgController : ControllerBase
 
         return Ok(result.Data);
     }
+
+    [HttpGet("search")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SearchOrganizations([FromQuery] string q, [FromQuery] int limit = 10)
+    {
+        var result = await _orgService.SearchOrganizations(q, limit);
+        if (!result.Success)
+            return BadRequest(result.Errors);
+
+        return Ok(result.Data);
+    }
 }

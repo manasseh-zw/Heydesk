@@ -9,9 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SupportRouteRouteImport } from './routes/support/route'
 import { Route as OrgRouteRouteImport } from './routes/$org/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SupportIndexRouteImport } from './routes/support/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as OrgIndexRouteImport } from './routes/$org/index'
 import { Route as OnboardingSelectOrganizationRouteImport } from './routes/onboarding/select-organization'
@@ -21,14 +21,10 @@ import { Route as OrgTicketsRouteImport } from './routes/$org/tickets'
 import { Route as OrgKnowledgeBaseRouteImport } from './routes/$org/knowledge-base'
 import { Route as OrgAnalyticsRouteImport } from './routes/$org/analytics'
 import { Route as OrgAgentsRouteImport } from './routes/$org/agents'
+import { Route as SupportOrgIndexRouteImport } from './routes/support/$org/index'
 import { Route as AuthSupportSignupRouteImport } from './routes/auth/support/signup'
 import { Route as AuthSupportSigninRouteImport } from './routes/auth/support/signin'
 
-const SupportRouteRoute = SupportRouteRouteImport.update({
-  id: '/support',
-  path: '/support',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const OrgRouteRoute = OrgRouteRouteImport.update({
   id: '/$org',
   path: '/$org',
@@ -37,6 +33,11 @@ const OrgRouteRoute = OrgRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportIndexRoute = SupportIndexRouteImport.update({
+  id: '/support/',
+  path: '/support/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
@@ -85,6 +86,11 @@ const OrgAgentsRoute = OrgAgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => OrgRouteRoute,
 } as any)
+const SupportOrgIndexRoute = SupportOrgIndexRouteImport.update({
+  id: '/support/$org/',
+  path: '/support/$org/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthSupportSignupRoute = AuthSupportSignupRouteImport.update({
   id: '/auth/support/signup',
   path: '/auth/support/signup',
@@ -99,7 +105,6 @@ const AuthSupportSigninRoute = AuthSupportSigninRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
-  '/support': typeof SupportRouteRoute
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/analytics': typeof OrgAnalyticsRoute
   '/$org/knowledge-base': typeof OrgKnowledgeBaseRoute
@@ -109,12 +114,13 @@ export interface FileRoutesByFullPath {
   '/onboarding/select-organization': typeof OnboardingSelectOrganizationRoute
   '/$org/': typeof OrgIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
+  '/support': typeof SupportIndexRoute
   '/auth/support/signin': typeof AuthSupportSigninRoute
   '/auth/support/signup': typeof AuthSupportSignupRoute
+  '/support/$org': typeof SupportOrgIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/support': typeof SupportRouteRoute
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/analytics': typeof OrgAnalyticsRoute
   '/$org/knowledge-base': typeof OrgKnowledgeBaseRoute
@@ -124,14 +130,15 @@ export interface FileRoutesByTo {
   '/onboarding/select-organization': typeof OnboardingSelectOrganizationRoute
   '/$org': typeof OrgIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
+  '/support': typeof SupportIndexRoute
   '/auth/support/signin': typeof AuthSupportSigninRoute
   '/auth/support/signup': typeof AuthSupportSignupRoute
+  '/support/$org': typeof SupportOrgIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
-  '/support': typeof SupportRouteRoute
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/analytics': typeof OrgAnalyticsRoute
   '/$org/knowledge-base': typeof OrgKnowledgeBaseRoute
@@ -141,15 +148,16 @@ export interface FileRoutesById {
   '/onboarding/select-organization': typeof OnboardingSelectOrganizationRoute
   '/$org/': typeof OrgIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
+  '/support/': typeof SupportIndexRoute
   '/auth/support/signin': typeof AuthSupportSigninRoute
   '/auth/support/signup': typeof AuthSupportSignupRoute
+  '/support/$org/': typeof SupportOrgIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/$org'
-    | '/support'
     | '/$org/agents'
     | '/$org/analytics'
     | '/$org/knowledge-base'
@@ -159,12 +167,13 @@ export interface FileRouteTypes {
     | '/onboarding/select-organization'
     | '/$org/'
     | '/onboarding'
+    | '/support'
     | '/auth/support/signin'
     | '/auth/support/signup'
+    | '/support/$org'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/support'
     | '/$org/agents'
     | '/$org/analytics'
     | '/$org/knowledge-base'
@@ -174,13 +183,14 @@ export interface FileRouteTypes {
     | '/onboarding/select-organization'
     | '/$org'
     | '/onboarding'
+    | '/support'
     | '/auth/support/signin'
     | '/auth/support/signup'
+    | '/support/$org'
   id:
     | '__root__'
     | '/'
     | '/$org'
-    | '/support'
     | '/$org/agents'
     | '/$org/analytics'
     | '/$org/knowledge-base'
@@ -190,31 +200,27 @@ export interface FileRouteTypes {
     | '/onboarding/select-organization'
     | '/$org/'
     | '/onboarding/'
+    | '/support/'
     | '/auth/support/signin'
     | '/auth/support/signup'
+    | '/support/$org/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OrgRouteRoute: typeof OrgRouteRouteWithChildren
-  SupportRouteRoute: typeof SupportRouteRoute
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
   OnboardingSelectOrganizationRoute: typeof OnboardingSelectOrganizationRoute
   OnboardingIndexRoute: typeof OnboardingIndexRoute
+  SupportIndexRoute: typeof SupportIndexRoute
   AuthSupportSigninRoute: typeof AuthSupportSigninRoute
   AuthSupportSignupRoute: typeof AuthSupportSignupRoute
+  SupportOrgIndexRoute: typeof SupportOrgIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/support': {
-      id: '/support'
-      path: '/support'
-      fullPath: '/support'
-      preLoaderRoute: typeof SupportRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/$org': {
       id: '/$org'
       path: '/$org'
@@ -227,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support/': {
+      id: '/support/'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding/': {
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgAgentsRouteImport
       parentRoute: typeof OrgRouteRoute
     }
+    '/support/$org/': {
+      id: '/support/$org/'
+      path: '/support/$org'
+      fullPath: '/support/$org'
+      preLoaderRoute: typeof SupportOrgIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/support/signup': {
       id: '/auth/support/signup'
       path: '/auth/support/signup'
@@ -332,13 +352,14 @@ const OrgRouteRouteWithChildren = OrgRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OrgRouteRoute: OrgRouteRouteWithChildren,
-  SupportRouteRoute: SupportRouteRoute,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
   OnboardingSelectOrganizationRoute: OnboardingSelectOrganizationRoute,
   OnboardingIndexRoute: OnboardingIndexRoute,
+  SupportIndexRoute: SupportIndexRoute,
   AuthSupportSigninRoute: AuthSupportSigninRoute,
   AuthSupportSignupRoute: AuthSupportSignupRoute,
+  SupportOrgIndexRoute: SupportOrgIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

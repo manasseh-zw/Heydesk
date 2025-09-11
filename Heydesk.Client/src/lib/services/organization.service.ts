@@ -28,3 +28,13 @@ export const getOrganizationMembers = async (
   
   return apiRequest<GetMembersResponse>(url);
 };
+
+export const searchOrganizations = async (
+  q: string,
+  limit = 10
+): Promise<Organization[]> => {
+  const params = new URLSearchParams();
+  params.set("q", q);
+  if (limit) params.set("limit", limit.toString());
+  return apiRequest<Organization[]>(`/api/org/search?${params.toString()}`);
+};

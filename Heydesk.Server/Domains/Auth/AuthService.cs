@@ -23,7 +23,10 @@ public interface IAuthService
     Task<Result<CustomerAuthResponse>> CustomerSignIn(CustomerSignInRequest request);
     Task<Result<CustomerAuthResponse>> CustomerGoogleAuth(GoogleAuthRequest request);
     Task<Result<CustomerDataResponse>> GetCustomerData(Guid customerId);
-    Task<Result<CustomerDataResponse>> SelectOrganization(Guid customerId, SelectOrganizationRequest request);
+    Task<Result<CustomerDataResponse>> SelectOrganization(
+        Guid customerId,
+        SelectOrganizationRequest request
+    );
 }
 
 public class AuthService : IAuthService
@@ -325,10 +328,9 @@ public class AuthService : IAuthService
             return Result.Fail([.. validationResult.Errors.Select(e => e.ErrorMessage)]);
 
         // Check if the identifier is an email or username
-        var customer = await _repository.Customers
-            .FirstOrDefaultAsync(c =>
-                c.Email == request.UserIdentifier || c.Username == request.UserIdentifier
-            );
+        var customer = await _repository.Customers.FirstOrDefaultAsync(c =>
+            c.Email == request.UserIdentifier || c.Username == request.UserIdentifier
+        );
 
         if (customer == null)
             return Result.Fail("Invalid credentials");
@@ -392,9 +394,9 @@ public class AuthService : IAuthService
                 return Result.Fail("Invalid user data received from Google");
             }
 
-            var existingCustomer = await _repository
-                .Customers
-                .FirstOrDefaultAsync(c => c.Email == googleUser.Email);
+            var existingCustomer = await _repository.Customers.FirstOrDefaultAsync(c =>
+                c.Email == googleUser.Email
+            );
 
             if (existingCustomer != null)
             {
@@ -456,8 +458,7 @@ public class AuthService : IAuthService
 
     public async Task<Result<CustomerDataResponse>> GetCustomerData(Guid customerId)
     {
-        var customer = await _repository.Customers
-            .FirstOrDefaultAsync(c => c.Id == customerId);
+        var customer = await _repository.Customers.FirstOrDefaultAsync(c => c.Id == customerId);
 
         if (customer == null)
         {
@@ -477,11 +478,15 @@ public class AuthService : IAuthService
         return Result.Ok(response);
     }
 
-    public async Task<Result<CustomerDataResponse>> SelectOrganization(Guid customerId, SelectOrganizationRequest request)
+    public async Task<Result<CustomerDataResponse>> SelectOrganization(
+        Guid customerId,
+        SelectOrganizationRequest request
+    )
     {
         // Verify the organization exists
-        var organization = await _repository.Organizations
-            .FirstOrDefaultAsync(o => o.Slug == request.OrganizationSlug);
+        var organization = await _repository.Organizations.FirstOrDefaultAsync(o =>
+            o.Slug == request.OrganizationSlug
+        );
 
         if (organization == null)
         {
@@ -489,8 +494,7 @@ public class AuthService : IAuthService
         }
 
         // Get the customer
-        var customer = await _repository.Customers
-            .FirstOrDefaultAsync(c => c.Id == customerId);
+        var customer = await _repository.Customers.FirstOrDefaultAsync(c => c.Id == customerId);
 
         if (customer == null)
         {
