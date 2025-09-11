@@ -21,7 +21,9 @@ public interface IAuthService
     // Customer Auth Methods
     Task<Result<CustomerAuthResponse>> CustomerSignUp(CustomerSignUpRequest request);
     Task<Result<CustomerAuthResponse>> CustomerSignIn(CustomerSignInRequest request);
+    Task<Result<CustomerAuthResponse>> CustomerGoogleAuth(GoogleAuthRequest request);
     Task<Result<CustomerDataResponse>> GetCustomerData(Guid customerId);
+    Task<Result<CustomerDataResponse>> SelectOrganization(Guid customerId, SelectOrganizationRequest request);
 }
 
 public class AuthService : IAuthService
@@ -285,7 +287,7 @@ public class AuthService : IAuthService
         if (isEmailTaken)
             return Result.Fail("Email already exists");
 
-        var validationResult = new AuthValidator().Validate(request);
+        var validationResult = new CustomerAuthValidator().Validate(request);
 
         if (!validationResult.IsValid)
             return Result.Fail([.. validationResult.Errors.Select(e => e.ErrorMessage)]);
@@ -318,7 +320,7 @@ public class AuthService : IAuthService
 
     public async Task<Result<CustomerAuthResponse>> CustomerSignIn(CustomerSignInRequest request)
     {
-        var validationResult = new SignInValidator().Validate(request);
+        var validationResult = new CustomerSignInValidator().Validate(request);
         if (!validationResult.IsValid)
             return Result.Fail([.. validationResult.Errors.Select(e => e.ErrorMessage)]);
 
@@ -358,6 +360,100 @@ public class AuthService : IAuthService
         return Result.Ok(new CustomerAuthResponse(token, customerData));
     }
 
+    public async Task<Result<CustomerAuthResponse>> CustomerGoogleAuth(GoogleAuthRequest request)
+    {
+        if (string.IsNullOrEmpty(request.AccessToken))
+        {
+            return Result.Fail("Invalid Google access token");
+        }
+
+        try
+        {
+            using var httpClient = _httpClientFactory.CreateClient("Google");
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                "Bearer",
+                request.AccessToken
+            );
+
+            var userInfoResponse = await httpClient.GetAsync(
+                "https://www.googleapis.com/oauth2/v3/userinfo"
+            );
+
+            if (!userInfoResponse.IsSuccessStatusCode)
+            {
+                return Result.Fail("Failed to fetch user data from Google API");
+            }
+
+            var content = await userInfoResponse.Content.ReadAsStringAsync();
+            var googleUser = JsonSerializer.Deserialize<GoogleUserInfo>(content);
+
+            if (googleUser == null || string.IsNullOrEmpty(googleUser.Email))
+            {
+                return Result.Fail("Invalid user data received from Google");
+            }
+
+            var existingCustomer = await _repository
+                .Customers
+                .FirstOrDefaultAsync(c => c.Email == googleUser.Email);
+
+            if (existingCustomer != null)
+            {
+                if (existingCustomer.AuthProvider != AuthProvider.Google)
+                {
+                    existingCustomer.AuthProvider = AuthProvider.Google;
+                }
+
+                // Update basic profile if changed
+                existingCustomer.Username = existingCustomer.Username ?? googleUser.Username;
+                existingCustomer.AvatarUrl = existingCustomer.AvatarUrl ?? googleUser.AvatarUrl;
+                existingCustomer.GoogleId = existingCustomer.GoogleId ?? googleUser.Id;
+
+                await _repository.SaveChangesAsync();
+
+                var token = _tokenManager.GenerateCustomerToken(existingCustomer);
+                var customerData = new CustomerDataResponse(
+                    existingCustomer.Id,
+                    existingCustomer.Email,
+                    existingCustomer.Username,
+                    existingCustomer.AvatarUrl,
+                    existingCustomer.CreatedAt,
+                    existingCustomer.AuthProvider,
+                    existingCustomer.Organizations
+                );
+
+                return Result.Ok(new CustomerAuthResponse(token, customerData));
+            }
+
+            var newCustomer = new CustomerModel
+            {
+                Email = googleUser.Email,
+                Username = googleUser.Username,
+                AvatarUrl = googleUser.AvatarUrl,
+                GoogleId = googleUser.Id,
+                AuthProvider = AuthProvider.Google,
+            };
+
+            await _repository.Customers.AddAsync(newCustomer);
+            await _repository.SaveChangesAsync();
+
+            var newToken = _tokenManager.GenerateCustomerToken(newCustomer);
+            var newCustomerData = new CustomerDataResponse(
+                newCustomer.Id,
+                newCustomer.Email,
+                newCustomer.Username,
+                newCustomer.AvatarUrl,
+                newCustomer.CreatedAt,
+                newCustomer.AuthProvider,
+                newCustomer.Organizations
+            );
+            return Result.Ok(new CustomerAuthResponse(newToken, newCustomerData));
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail($"Error processing Google sign-in: {ex.Message}");
+        }
+    }
+
     public async Task<Result<CustomerDataResponse>> GetCustomerData(Guid customerId)
     {
         var customer = await _repository.Customers
@@ -379,5 +475,46 @@ public class AuthService : IAuthService
         );
 
         return Result.Ok(response);
+    }
+
+    public async Task<Result<CustomerDataResponse>> SelectOrganization(Guid customerId, SelectOrganizationRequest request)
+    {
+        // Verify the organization exists
+        var organization = await _repository.Organizations
+            .FirstOrDefaultAsync(o => o.Slug == request.OrganizationSlug);
+
+        if (organization == null)
+        {
+            return Result.Fail("Organization not found");
+        }
+
+        // Get the customer
+        var customer = await _repository.Customers
+            .FirstOrDefaultAsync(c => c.Id == customerId);
+
+        if (customer == null)
+        {
+            return Result.Fail("Customer not found");
+        }
+
+        // Add organization to customer's list if not already present
+        if (!customer.Organizations.Contains(request.OrganizationSlug))
+        {
+            customer.Organizations.Add(request.OrganizationSlug);
+            await _repository.SaveChangesAsync();
+        }
+
+        // Return updated customer data
+        var customerData = new CustomerDataResponse(
+            customer.Id,
+            customer.Email,
+            customer.Username,
+            customer.AvatarUrl,
+            customer.CreatedAt,
+            customer.AuthProvider,
+            customer.Organizations
+        );
+
+        return Result.Ok(customerData);
     }
 }

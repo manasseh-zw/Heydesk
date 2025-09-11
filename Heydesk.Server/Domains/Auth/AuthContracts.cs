@@ -42,21 +42,24 @@ public class AuthContracts
         List<string> Organizations
     );
 
+    // Organization Selection Contracts
+    public record SelectOrganizationRequest(string OrganizationSlug);
+
     public class GoogleUserInfo
     {
         [JsonPropertyName("sub")]
-        public string Id { get; set; }
+        public required string Id { get; set; }
 
         [JsonPropertyName("name")]
-        public string Username { get; set; }
+        public required string Username { get; set; }
 
         [JsonPropertyName("email")]
-        public string Email { get; set; }
+        public required string Email { get; set; }
 
         [JsonPropertyName("email_verified")]
         public bool IsEmailVerified { get; set; }
 
         [JsonPropertyName("picture")]
-        public string AvatarUrl { get; set; }
+        public required string AvatarUrl { get; set; }
     }
 }

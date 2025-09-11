@@ -13,6 +13,12 @@ public class RepositoryContext(DbContextOptions<RepositoryContext> options) : Db
         modelBuilder.Entity<OrganizationModel>(entity =>
         {
             entity.ToTable("Organizations");
+
+            // Add unique index on slug for fast lookups
+            entity.HasIndex(o => o.Slug)
+                .IsUnique()
+                .HasDatabaseName("IX_Organizations_Slug");
+
             entity.HasMany(o => o.Members)
                 .WithOne(u => u.Organization)
                 .HasForeignKey(u => u.OrganizationId)

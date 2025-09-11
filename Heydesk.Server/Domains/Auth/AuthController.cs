@@ -95,6 +95,18 @@ public class AuthController : ControllerBase
         return Ok(result.Data.CustomerData);
     }
 
+    [HttpPost("support/google-auth")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CustomerGoogleAuth([FromBody] GoogleAuthRequest request)
+    {
+        var result = await _authService.CustomerGoogleAuth(request);
+        if (!result.Success)
+            return BadRequest(result.Errors);
+
+        SetCustomerAuthCookie(HttpContext, result.Data!.Token);
+        return Ok(result.Data.CustomerData);
+    }
+
     [HttpGet("support/me")]
     [Authorize]
     public async Task<IActionResult> GetCustomerData()
@@ -102,6 +114,18 @@ public class AuthController : ControllerBase
         if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var customerId))
         {
             var result = await _authService.GetCustomerData(customerId);
+            return result.Success ? Ok(result.Data) : BadRequest(result.Errors);
+        }
+        return Unauthorized("Customer not authenticated");
+    }
+
+    [HttpPost("support/select-organization")]
+    [Authorize]
+    public async Task<IActionResult> SelectOrganization([FromBody] SelectOrganizationRequest request)
+    {
+        if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var customerId))
+        {
+            var result = await _authService.SelectOrganization(customerId, request);
             return result.Success ? Ok(result.Data) : BadRequest(result.Errors);
         }
         return Unauthorized("Customer not authenticated");

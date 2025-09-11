@@ -28,3 +28,29 @@ export type EmailSignInRequest = {
 export type GoogleAuthRequest = {
   accessToken: string
 }
+
+// Customer Auth Types
+export type Customer = {
+  id: string
+  email: string
+  username: string
+  avatarUrl?: string
+  createdAt: string
+  authProvider: AuthProvider
+  organizations: string[]
+}
+
+export type CustomerSignUpRequest = {
+  username: string
+  email: string
+  password: string
+}
+
+export type CustomerSignInRequest = {
+  userIdentifier: string
+  password: string
+}
+
+export type SelectOrganizationRequest = {
+  organizationSlug: string
+}

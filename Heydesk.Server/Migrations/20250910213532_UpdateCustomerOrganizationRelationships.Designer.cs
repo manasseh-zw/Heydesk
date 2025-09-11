@@ -4,6 +4,7 @@ using Heydesk.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Heydesk.Server.Migrations
 {
     [DbContext(typeof(RepositoryContext))]
-    partial class RepositoryContextModelSnapshot : ModelSnapshot
+    [Migration("20250910213532_UpdateCustomerOrganizationRelationships")]
+    partial class UpdateCustomerOrganizationRelationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,21 @@ namespace Heydesk.Server.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+
+            modelBuilder.Entity("CustomerOrganizations", b =>
+                {
+                    b.Property<Guid>("CustomerModelId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("OrganizationsId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("CustomerModelId", "OrganizationsId");
+
+                    b.HasIndex("OrganizationsId");
+
+                    b.ToTable("CustomerOrganizations");
+                });
 
             modelBuilder.Entity("Heydesk.Server.Data.Models.AgentModel", b =>
                 {
@@ -106,10 +124,6 @@ namespace Heydesk.Server.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("GoogleId")
-                        .HasColumnType("longtext");
-
-                    b.PrimitiveCollection<string>("Organizations")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("PasswordHash")
@@ -308,6 +322,21 @@ namespace Heydesk.Server.Migrations
                     b.HasIndex("OrganizationId");
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("CustomerOrganizations", b =>
+                {
+                    b.HasOne("Heydesk.Server.Data.Models.CustomerModel", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Heydesk.Server.Data.Models.OrganizationModel", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Heydesk.Server.Data.Models.AgentModel", b =>
