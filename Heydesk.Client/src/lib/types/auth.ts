@@ -37,7 +37,7 @@ export type Customer = {
   avatarUrl?: string
   createdAt: string
   authProvider: AuthProvider
-  organizations: string[]
+  organizations: Organization[]
 }
 
 export type CustomerSignUpRequest = {

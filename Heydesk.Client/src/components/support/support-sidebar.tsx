@@ -2,7 +2,6 @@ import { Logo } from "../logo";
 import { NavUser } from "../org/layout/nav-user";
 import { Input } from "../ui/input";
 import { Separator } from "../ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import {
   SidebarContent,
   SidebarFooter,
@@ -11,18 +10,27 @@ import {
   SidebarMenuItem,
   Sidebar,
 } from "../ui/sidebar";
-import { AccountSwitcher } from "./account-switcher";
-import { accounts, chats, tickets } from "./data";
+import { OrgSwitcher } from "./org-switcher";
+import { chats } from "./data";
 import { useStore } from "@tanstack/react-store";
 import { customerAuthState } from "@/lib/state/customer.state";
-import { Search } from "lucide-react";
-import { TicketList } from "./ticket-list";
+import { Search, Plus } from "lucide-react";
+import { Button } from "../ui/button";
 import { ChatList } from "./chat-list";
 
 export default function SupportSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const { customer } = useStore(customerAuthState);
+
+  // Convert customer organizations to org switcher format
+  const organizations =
+    customer?.organizations?.map((org) => ({
+      label: org.name,
+      slug: org.slug,
+      url: org.url,
+    })) || [];
+
   return (
     <Sidebar
       collapsible="offcanvas"
@@ -40,32 +48,26 @@ export default function SupportSidebar({
                   Hey<span className="text-lime-500 font-light">desk</span>
                 </span>
               </div>
-              <AccountSwitcher isCollapsed={false} accounts={accounts} />
+              <OrgSwitcher isCollapsed={false} organizations={organizations} />
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <Separator className="bg-zinc-100" />
       <SidebarContent>
-        <Tabs defaultValue="tickets">
-          <div className="flex items-center px-2 pt-3">
-            <TabsList className="w-full h-10">
-              <TabsTrigger value="tickets" className="w-1/2">
-                Tickets
-              </TabsTrigger>
-              <TabsTrigger value="chats" className="w-1/2">
-                Chats
-              </TabsTrigger>
-            </TabsList>
+        <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 p-3 backdrop-blur">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
+              <Input placeholder="Search conversations" className="pl-8" />
+            </div>
+            <Button size="icon" variant="default" className="h-8 w-8">
+              <Plus className="h-4 w-4" />
+              <span className="sr-only">New chat</span>
+            </Button>
           </div>
-          {/* <Separator /> */}
-          <TabsContent value="tickets" className="m-0 h-screen">
-            <TicketList items={tickets} />
-          </TabsContent>
-          <TabsContent value="chats" className="m-0 h-screen">
-            <ChatList items={chats} />
-          </TabsContent>
-        </Tabs>
+        </div>
+        <ChatList items={chats} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser

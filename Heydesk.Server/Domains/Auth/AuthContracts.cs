@@ -39,7 +39,7 @@ public class AuthContracts
         string? AvatarUrl,
         DateTime CreatedAt,
         AuthProvider AuthProvider,
-        List<string> Organizations
+        List<GetOrgResponse> Organizations
     );
 
     // Organization Selection Contracts

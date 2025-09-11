@@ -308,6 +308,19 @@ public class AuthService : IAuthService
         await _repository.SaveChangesAsync();
 
         var token = _tokenManager.GenerateCustomerToken(customer);
+
+        // Fetch full organization data for the customer's organizations
+        var organizations = await _repository.Organizations
+            .Where(o => customer.Organizations.Contains(o.Slug))
+            .Select(o => new GetOrgResponse(
+                o.Id,
+                o.Name,
+                o.Slug,
+                o.Url,
+                o.IconUrl
+            ))
+            .ToListAsync();
+
         var customerData = new CustomerDataResponse(
             customer.Id,
             customer.Email,
@@ -315,7 +328,7 @@ public class AuthService : IAuthService
             customer.AvatarUrl,
             customer.CreatedAt,
             customer.AuthProvider,
-            customer.Organizations
+            organizations
         );
 
         return Result.Ok(new CustomerAuthResponse(token, customerData));
@@ -349,6 +362,19 @@ public class AuthService : IAuthService
             return Result.Fail("Invalid credentials");
 
         var token = _tokenManager.GenerateCustomerToken(customer);
+
+        // Fetch full organization data for the customer's organizations
+        var organizations = await _repository.Organizations
+            .Where(o => customer.Organizations.Contains(o.Slug))
+            .Select(o => new GetOrgResponse(
+                o.Id,
+                o.Name,
+                o.Slug,
+                o.Url,
+                o.IconUrl
+            ))
+            .ToListAsync();
+
         var customerData = new CustomerDataResponse(
             customer.Id,
             customer.Email,
@@ -356,7 +382,7 @@ public class AuthService : IAuthService
             customer.AvatarUrl,
             customer.CreatedAt,
             customer.AuthProvider,
-            customer.Organizations
+            organizations
         );
 
         return Result.Ok(new CustomerAuthResponse(token, customerData));
@@ -413,6 +439,19 @@ public class AuthService : IAuthService
                 await _repository.SaveChangesAsync();
 
                 var token = _tokenManager.GenerateCustomerToken(existingCustomer);
+
+                // Fetch full organization data for the customer's organizations
+                var existingOrganizations = await _repository.Organizations
+                    .Where(o => existingCustomer.Organizations.Contains(o.Slug))
+                    .Select(o => new GetOrgResponse(
+                        o.Id,
+                        o.Name,
+                        o.Slug,
+                        o.Url,
+                        o.IconUrl
+                    ))
+                    .ToListAsync();
+
                 var customerData = new CustomerDataResponse(
                     existingCustomer.Id,
                     existingCustomer.Email,
@@ -420,7 +459,7 @@ public class AuthService : IAuthService
                     existingCustomer.AvatarUrl,
                     existingCustomer.CreatedAt,
                     existingCustomer.AuthProvider,
-                    existingCustomer.Organizations
+                    existingOrganizations
                 );
 
                 return Result.Ok(new CustomerAuthResponse(token, customerData));
@@ -439,6 +478,19 @@ public class AuthService : IAuthService
             await _repository.SaveChangesAsync();
 
             var newToken = _tokenManager.GenerateCustomerToken(newCustomer);
+
+            // Fetch full organization data for the customer's organizations
+            var organizations = await _repository.Organizations
+                .Where(o => newCustomer.Organizations.Contains(o.Slug))
+                .Select(o => new GetOrgResponse(
+                    o.Id,
+                    o.Name,
+                    o.Slug,
+                    o.Url,
+                    o.IconUrl
+                ))
+                .ToListAsync();
+
             var newCustomerData = new CustomerDataResponse(
                 newCustomer.Id,
                 newCustomer.Email,
@@ -446,7 +498,7 @@ public class AuthService : IAuthService
                 newCustomer.AvatarUrl,
                 newCustomer.CreatedAt,
                 newCustomer.AuthProvider,
-                newCustomer.Organizations
+                organizations
             );
             return Result.Ok(new CustomerAuthResponse(newToken, newCustomerData));
         }
@@ -465,6 +517,18 @@ public class AuthService : IAuthService
             return Result.Fail("Customer not found");
         }
 
+        // Fetch full organization data for the customer's organizations
+        var organizations = await _repository.Organizations
+            .Where(o => customer.Organizations.Contains(o.Slug))
+            .Select(o => new GetOrgResponse(
+                o.Id,
+                o.Name,
+                o.Slug,
+                o.Url,
+                o.IconUrl
+            ))
+            .ToListAsync();
+
         var response = new CustomerDataResponse(
             customer.Id,
             customer.Email,
@@ -472,7 +536,7 @@ public class AuthService : IAuthService
             customer.AvatarUrl,
             customer.CreatedAt,
             customer.AuthProvider,
-            customer.Organizations
+            organizations
         );
 
         return Result.Ok(response);
@@ -508,6 +572,18 @@ public class AuthService : IAuthService
             await _repository.SaveChangesAsync();
         }
 
+        // Fetch full organization data for the customer's organizations
+        var organizations = await _repository.Organizations
+            .Where(o => customer.Organizations.Contains(o.Slug))
+            .Select(o => new GetOrgResponse(
+                o.Id,
+                o.Name,
+                o.Slug,
+                o.Url,
+                o.IconUrl
+            ))
+            .ToListAsync();
+
         // Return updated customer data
         var customerData = new CustomerDataResponse(
             customer.Id,
@@ -516,7 +592,7 @@ public class AuthService : IAuthService
             customer.AvatarUrl,
             customer.CreatedAt,
             customer.AuthProvider,
-            customer.Organizations
+            organizations
         );
 
         return Result.Ok(customerData);
