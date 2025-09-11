@@ -247,8 +247,3 @@ so when they creat their account they are redirected back to support/org-slug wh
 now for the ui its coing to be quite simple so we have a sidebar which has the ticket history and chat history aide like we have in most email and chat apps and in the main content we have a prompt input landing page where teh customer can immedialy ask their question and start chatting with a support agent...
 
 so on the side bar basically chat cards going down vertially and we have a tab switcher on top where we have tickets tab and conversations tab, then at the veruy to of the sidebar we have a team switcher where the cusomter can switch contexts between different orgs ...
-
-so what does this approach look like at a technical imlementaion level
-
-okay so on the backend
-we probably need to make a few adjustments mainly to the CustomerModel because im just thinking a customer can have 2 tihngs there is a ticket and conversations.. so conversations are just interactions with the agent that have not been opened as tickets .. but im thinking isnt this just complicating it... i dont know now becuase if we go with the split appraoch we have to manage when a converstaion becoes a ticket, maybe we will need a flag in conversation model to say is it tied to a ticket or not maybe... what do you think how should i go about modelling this?

@@ -57,7 +57,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("me")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "UserBearer")]
     public async Task<IActionResult> GetUserData()
     {
         if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
@@ -108,7 +108,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("support/me")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "CustomerBearer")]
     public async Task<IActionResult> GetCustomerData()
     {
         if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var customerId))
@@ -120,7 +120,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("support/select-organization")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "CustomerBearer")]
     public async Task<IActionResult> SelectOrganization([FromBody] SelectOrganizationRequest request)
     {
         if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var customerId))

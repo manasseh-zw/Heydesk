@@ -3,6 +3,8 @@ import { storage, STORAGE_KEYS } from "@/lib/utils/storage";
 import SupportOrgSelector from "@/components/support/org-selector";
 import { useEffect, useState } from "react";
 import { searchOrganizations } from "@/lib/services/organization.service";
+import { selectOrganization } from "@/lib/services/auth.service";
+import { customerAuthActions } from "@/lib/state/customer.state";
 import type { Organization } from "@/lib/types/organization";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -73,10 +75,22 @@ function RouteComponent() {
                 className="p-5 rounded-full"
                 disabled={!value}
                 aria-label="Continue"
-                onClick={() => {
+                onClick={async () => {
                   if (!value) return;
                   const selected = options.find((o) => o.id === value);
                   if (!selected) return;
+                  try {
+                    const updated = await selectOrganization({
+                      organizationSlug: selected.slug,
+                    });
+                    customerAuthActions.setCustomer(updated);
+                    storage.set(
+                      STORAGE_KEYS.PENDING_SUPPORT_ORG_SLUG,
+                      selected.slug
+                    );
+                  } catch {
+                    // On failure, keep current state and still attempt navigation
+                  }
                   navigate({
                     to: "/support/$org",
                     params: { org: selected.slug },

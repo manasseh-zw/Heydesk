@@ -1,7 +1,8 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, isRedirect } from "@tanstack/react-router";
 import { getCurrentCustomer } from "@/lib/services/auth.service";
 import { customerAuthActions } from "@/lib/state/customer.state";
 import { storage, STORAGE_KEYS } from "@/lib/utils/storage";
+import { PromptLanding } from "@/components/support/prompt-landing";
 
 export const Route = createFileRoute("/support/$org/")({
   loader: async ({ params }) => {
@@ -16,10 +17,12 @@ export const Route = createFileRoute("/support/$org/")({
       console.log("customer", customer);
       customerAuthActions.setCustomer(customer);
       if (!customer.organizations || customer.organizations.length === 0) {
+        console.log("no organizations");
         throw redirect({ to: "/onboarding/select-organization" });
       }
       return null;
-    } catch {
+    } catch (err) {
+      if (isRedirect(err)) throw err;
       customerAuthActions.clearCustomer();
       throw redirect({ to: "/auth/support/signup" });
     }
@@ -28,5 +31,9 @@ export const Route = createFileRoute("/support/$org/")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/support/$org/"!</div>;
+  return (
+    <main>
+      <PromptLanding />
+    </main>
+  );
 }

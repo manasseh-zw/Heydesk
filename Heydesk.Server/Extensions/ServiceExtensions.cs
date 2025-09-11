@@ -9,6 +9,7 @@ using Heydesk.Server.Domains.Document.Processors;
 using Heydesk.Server.Integrations;
 using Heydesk.Server.Domains.Organization;
 using Heydesk.Server.Utils;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -37,43 +38,67 @@ public static class ServiceExtensions
         services
             .AddAuthentication(options =>
             {
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = "Bearer";
             })
-            .AddJwtBearer(
-                "Bearer",
-                options =>
+            // Policy scheme decides which bearer to use based on cookies
+            .AddPolicyScheme("Bearer", "Bearer", options =>
+            {
+                options.ForwardDefaultSelector = context =>
                 {
-                    options.TokenValidationParameters = new TokenValidationParameters
+                    var hasCustomer = context.Request.Cookies.ContainsKey(Constants.CustomerAccessTokenCookieName);
+                    return hasCustomer ? "CustomerBearer" : "UserBearer";
+                };
+            })
+            .AddJwtBearer("UserBearer", options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    SaveSigninToken = true,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = AppConfig.JwtOptions.Issuer,
+                    ValidAudience = AppConfig.JwtOptions.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AppConfig.JwtOptions.Secret)),
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = ctx =>
                     {
-                        SaveSigninToken = true,
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = AppConfig.JwtOptions.Issuer,
-                        ValidAudience = AppConfig.JwtOptions.Audience,
-                        IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(AppConfig.JwtOptions.Secret)
-                        ),
-                    };
-
-                    options.Events = new JwtBearerEvents
-                    {
-                        OnMessageReceived = ctx =>
+                        if (ctx.Request.Cookies.TryGetValue(Constants.AccessTokenCookieName, out var token) && !string.IsNullOrEmpty(token))
                         {
-                            ctx.Request.Cookies.TryGetValue(
-                                Constants.AccessTokenCookieName,
-                                out var accessToken
-                            );
-
-                            if (!string.IsNullOrEmpty(accessToken))
-                                ctx.Token = accessToken;
-
-                            return Task.CompletedTask;
-                        },
-                    };
-                }
-            );
+                            ctx.Token = token;
+                        }
+                        return Task.CompletedTask;
+                    },
+                };
+            })
+            .AddJwtBearer("CustomerBearer", options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    SaveSigninToken = true,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = AppConfig.JwtOptions.Issuer,
+                    ValidAudience = AppConfig.JwtOptions.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AppConfig.JwtOptions.Secret)),
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = ctx =>
+                    {
+                        if (ctx.Request.Cookies.TryGetValue(Constants.CustomerAccessTokenCookieName, out var token) && !string.IsNullOrEmpty(token))
+                        {
+                            ctx.Token = token;
+                        }
+                        return Task.CompletedTask;
+                    },
+                };
+            });
 
         return services;
     }
