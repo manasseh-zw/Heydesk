@@ -1,16 +1,5 @@
-import { useState, type FormEvent } from "react";
-import {
-  AudioWaveformIcon,
-  CameraIcon,
-  ChevronDownIcon,
-  FileIcon,
-  ImageIcon,
-  LightbulbIcon,
-  PaperclipIcon,
-  ScreenShareIcon,
-  SearchIcon,
-  Send,
-} from "lucide-react";
+import React, { useState, type FormEvent } from "react";
+import { AudioWaveformIcon, Send } from "lucide-react";
 import { Logo } from "@/components/logo";
 import {
   PromptInput,
@@ -20,20 +9,82 @@ import {
   PromptInputTools,
   type PromptInputMessage,
 } from "../ai-elements/prompt-input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import Avatar from "boring-avatars";
+import { cn } from "@/lib/utils";
+import { useStore } from "@tanstack/react-store";
+import { customerAuthState } from "@/lib/state/customer.state";
 
 type Props = {
   onSubmit?: (text: string) => void;
 };
 
+const Square = ({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) => (
+  <span
+    data-square
+    className={cn(
+      "bg-muted text-muted-foreground flex size-6 items-center justify-center rounded text-[13px] font-medium",
+      className
+    )}
+    aria-hidden="true"
+  >
+    {children}
+  </span>
+);
+
+const getInitials = (name: string) =>
+  name
+    .split(" ")
+    .map((w) => w.charAt(0))
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+
+const OrgAvatar = ({ org }: { org: { name: string; url?: string } }) => {
+  const [useIcon, setUseIcon] = React.useState(true);
+  let faviconUrl: string | undefined;
+  try {
+    const domain = new URL(org.url || "").hostname;
+    if (domain) faviconUrl = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+  } catch {
+    faviconUrl = undefined;
+  }
+  const initials = getInitials(org.name);
+  return (
+    <Square className="bg-white">
+      {useIcon && faviconUrl ? (
+        <img
+          src={faviconUrl}
+          alt={initials}
+          width={16}
+          height={16}
+          className="size-5 object-fill"
+          onError={() => setUseIcon(false)}
+        />
+      ) : (
+        <span>{initials}</span>
+      )}
+    </Square>
+  );
+};
+
 export function PromptLanding({ onSubmit }: Props) {
   const [value, setValue] = useState("");
+  const [customer, currentOrganizationSlug] = useStore(
+    customerAuthState,
+    (state) => [state.customer, state.currentOrganization]
+  );
+
+  // Get the current organization from the customer's organizations
+  const currentOrganization = customer?.organizations?.find(
+    (org) => org.slug === currentOrganizationSlug
+  );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,10 +96,21 @@ export function PromptLanding({ onSubmit }: Props) {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center">
       <div className="flex items-center gap-3 mb-12">
-        <Logo className="h-8 w-auto" />
-        <div className="text-3xl font-light">
-          Hey<span className="text-lime-500">desk</span>
-        </div>
+        {currentOrganization ? (
+          <>
+            <OrgAvatar org={currentOrganization} />
+            <div className="text-2xl font-light">
+              {currentOrganization.name} <span className="">support</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <Logo className="h-8 w-auto" />
+            <div className="text-2xl font-light">
+              Hey<span className="text-lime-500">desk</span>
+            </div>
+          </>
+        )}
       </div>
       <div className="w-full max-w-2xl">
         <PromptInput
@@ -71,7 +133,7 @@ export function PromptLanding({ onSubmit }: Props) {
                 <DropdownMenuTrigger asChild>
                   <Avatar
                     className="mt-3"
-                    name="maya"
+                    name="eee"
                     size={28}
                     colors={[
                       "#0ea5e9",

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Plus } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useStore } from "@tanstack/react-store";
+import {
+  customerAuthState,
+  customerAuthActions,
+} from "@/lib/state/customer.state";
 
 const Square = ({
   className,
@@ -49,9 +54,13 @@ interface OrgSwitcherProps {
 }
 
 export function OrgSwitcher({ isCollapsed, organizations }: OrgSwitcherProps) {
-  const [selectedOrg, setSelectedOrg] = React.useState<string>(
-    organizations[0]?.slug || ""
-  );
+  const navigate = useNavigate();
+  const params = useParams({ from: "/support/$org" });
+  const { currentOrganization } = useStore(customerAuthState);
+
+  // Use current organization from store, fallback to URL param, then first org
+  const selectedOrg =
+    currentOrganization || params?.org || organizations[0]?.slug || "";
 
   const OrgAvatar = ({ org }: { org: { label: string; url?: string } }) => {
     const [useIcon, setUseIcon] = React.useState(true);
@@ -81,9 +90,17 @@ export function OrgSwitcher({ isCollapsed, organizations }: OrgSwitcherProps) {
     );
   };
 
+  const handleOrgChange = (orgSlug: string) => {
+    // Update the store
+    customerAuthActions.setCurrentOrganization(orgSlug);
+
+    // Navigate to the new organization's support page
+    navigate({ to: "/support/$org", params: { org: orgSlug } });
+  };
+
   return (
     <div className="flex items-center gap-2">
-      <Select defaultValue={selectedOrg} onValueChange={setSelectedOrg}>
+      <Select value={selectedOrg} onValueChange={handleOrgChange}>
         <SelectTrigger
           className={cn(
             "flex items-center gap-2 [&>span]:line-clamp-1 [&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:gap-1 [&>span]:truncate [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0",

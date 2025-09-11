@@ -20,6 +20,10 @@ export const Route = createFileRoute("/support/$org/")({
         console.log("no organizations");
         throw redirect({ to: "/onboarding/select-organization" });
       }
+
+      // Set the current organization from the URL
+      customerAuthActions.setCurrentOrganization(orgSlug);
+
       return null;
     } catch (err) {
       if (isRedirect(err)) throw err;

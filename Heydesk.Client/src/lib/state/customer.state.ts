@@ -50,15 +50,15 @@ export const customerAuthActions = {
       isLoading: false,
       currentOrganization: customer?.organizations?.[0] || null, // Set first org slug as default
     };
-    
+
     customerAuthState.setState((state) => ({
       ...state,
       ...newState,
+      currentOrganization: customer?.organizations?.[0]?.slug || null, // Ensure slug (string) not object
     }));
-    
+
     persistState(customerAuthState.state);
   },
-  
   setCurrentOrganization: (organizationSlug: string | null) => {
     customerAuthState.setState((state) => ({
       ...state,
