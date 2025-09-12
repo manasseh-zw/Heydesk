@@ -18,8 +18,8 @@ function RouteComponent() {
       <SidebarInset>
         <SupportHeader />
         <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">
-            <main className="p-5">
+          <div className="@container/main flex flex-1 flex-col">
+            <main className="flex-1">
               <Outlet />
             </main>
           </div>

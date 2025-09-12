@@ -3,6 +3,7 @@ import { ChatService, type ChatMessage } from "@/lib/services/chat.service";
 import {
   Conversation,
   ConversationContent,
+  ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import {
   Message,
@@ -30,11 +31,16 @@ export function ChatPage({ chatId }: ChatPageProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState<ChatMessage | null>(
+    null
+  );
 
   const chatService = useMemo(
     () =>
       new ChatService({
         onMessage: (message) => {
+          // This is the final complete message - replace any streaming message
+          setStreamingMessage(null);
           setMessages((prev) => {
             const exists = prev.some((m) => m.id === message.id);
             if (exists) {
@@ -43,8 +49,28 @@ export function ChatPage({ chatId }: ChatPageProps) {
             return [...prev, message];
           });
         },
-        onToken: () => {
-          // Token handling is managed by the service
+        onToken: (token) => {
+          setStreamingMessage((prev) => {
+            if (!prev) {
+              // Create new streaming message for AI assistant
+              return {
+                id: `streaming-${Date.now()}`,
+                role: "assistant" as const,
+                content: token,
+                sender: {
+                  id: "ai-agent",
+                  name: "AI Assistant",
+                  type: "ai-agent" as const,
+                },
+                createdAt: new Date().toISOString(),
+              };
+            }
+            // Append token to existing streaming message
+            return {
+              ...prev,
+              content: prev.content + token,
+            };
+          });
         },
         onStateChange: (state) => {
           console.log("Conversation state changed:", state);
@@ -99,47 +125,57 @@ export function ChatPage({ chatId }: ChatPageProps) {
   };
 
   return (
-    <div className="relative h-full max-w-4xl mx-auto w-full">
+    <div className="relative h-full max-w-3xl mx-auto w-full">
       {/* Messages - Scrollable container with bottom padding for input */}
       <div className="absolute inset-0 pb-24">
-        <ScrollArea className="h-full [&>[data-slot=scroll-area-scrollbar]]:hidden">
-          <Conversation className="min-h-full">
-            <ConversationContent className="p-4">
-              {messages.map((message) => {
+        <ScrollArea
+          className="h-full [&>[data-slot=scroll-area-scrollbar]]:hidden"
+          style={{
+            maskImage:
+              "linear-gradient(to bottom, transparent 0px, black 24px, black calc(100% - 24px), transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0px, black 24px, black calc(100% - 24px), transparent 100%)",
+          }}
+        >
+          <Conversation className="h-full">
+            <ConversationContent>
+              {[
+                ...messages,
+                ...(streamingMessage ? [streamingMessage] : []),
+              ].map((message) => {
                 const isUser = message.role === "user";
-                const isHumanAgent = message.role === "human-agent";
+                const isStreaming = message.id.startsWith("streaming-");
                 return (
                   <Message
                     key={message.id}
                     from={isUser ? "user" : "assistant"}
                   >
-                    <div className="max-w-[80%]">
-                      <MessageContent
-                        className={
-                          isHumanAgent ? "bg-gray-50 text-gray-900" : undefined
-                        }
-                      >
-                        <div className="text-xs text-muted-foreground mb-1 truncate max-w-[200px]">
-                          {message.sender.name}
+                    <MessageContent
+                      className={
+                        !isUser
+                          ? isStreaming
+                            ? "bg-gray-50/50 animate-pulse"
+                            : "bg-gray-50/50"
+                          : undefined
+                      }
+                    >
+                      {!isUser && message.role === "assistant" ? (
+                        <Streamdown className="prose prose-sm max-w-none">
+                          {message.content}
+                        </Streamdown>
+                      ) : (
+                        <div className="whitespace-pre-wrap">
+                          {message.content}
                         </div>
-                        {!isUser && message.role === "assistant" ? (
-                          <Streamdown className="prose prose-sm max-w-none">
-                            {message.content}
-                          </Streamdown>
-                        ) : (
-                          <div className="whitespace-pre-wrap">
-                            {message.content}
-                          </div>
-                        )}
-                      </MessageContent>
-                    </div>
+                      )}
+                    </MessageContent>
                     {message.sender.avatarUrl ? (
                       <MessageAvatar
                         src={message.sender.avatarUrl}
                         name={message.sender.name}
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border">
+                      <div className="size-8  rounded-full overflow-hidden">
                         <Avatar
                           name={message.sender.name}
                           size={32}
@@ -157,14 +193,15 @@ export function ChatPage({ chatId }: ChatPageProps) {
                 );
               })}
             </ConversationContent>
+            <ConversationScrollButton />
           </Conversation>
         </ScrollArea>
       </div>
 
       {/* Input - Fixed at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 bg-background border-t p-4">
+      <div className="absolute bottom-0 left-0 right-0 bg-background">
         <PromptInput
-          className="w-full"
+          className="w-full shadow-xl "
           onSubmit={() => {
             handleSend();
           }}
@@ -175,7 +212,7 @@ export function ChatPage({ chatId }: ChatPageProps) {
             onKeyDown={handleKeyDown}
             placeholder="Type your message..."
             disabled={!isConnected || isLoading}
-            className="min-h-[60px] max-h-[100px] resize-none"
+            className="min-h-[40px] max-h-[60px] resize-none"
           />
           <PromptInputToolbar className="p-2">
             <div className="flex items-center gap-2 ml-auto">

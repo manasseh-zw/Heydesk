@@ -499,6 +499,6 @@
 
 @layer utilities {
   .h-screen-minus-sidebar {
-    height: calc(100dvh - var(--app-header-h, 92px));
+    height: calc(100dvh - var(--app-header-h, 72px));
   }
 }
