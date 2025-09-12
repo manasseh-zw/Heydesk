@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Heydesk.Server.Domains.Notifications;
 using Heydesk.Server.Domains.Agent;
+using Heydesk.Server.Domains.Agent.Chat;
 using Heydesk.Server.Domains.Ticket;
 using Microsoft.AspNetCore.Identity;
 
@@ -105,6 +106,9 @@ public static class ServiceExtensions
 
     public static IServiceCollection ConfigureDomainServices(this IServiceCollection services)
     {
+        // Add memory cache
+        services.AddMemoryCache();
+
         // Password hashers
         services.AddScoped<IPasswordHasher<UserModel>, PasswordHasher<UserModel>>();
         services.AddScoped<IPasswordHasher<CustomerModel>, PasswordHasher<CustomerModel>>();
@@ -135,6 +139,9 @@ public static class ServiceExtensions
 
         // Agent services
         services.AddScoped<IAgentService, AgentService>();
+
+        // Chat services
+        services.AddScoped<ChatAgent>();
 
         // Ticket services
         services.AddScoped<ITicketService, TicketService>();

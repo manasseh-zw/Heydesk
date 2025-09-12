@@ -25,6 +25,7 @@ import { Route as SupportOrgRouteRouteImport } from './routes/support/$org/route
 import { Route as SupportOrgIndexRouteImport } from './routes/support/$org/index'
 import { Route as AuthSupportSignupRouteImport } from './routes/auth/support/signup'
 import { Route as AuthSupportSigninRouteImport } from './routes/auth/support/signin'
+import { Route as SupportOrgCChatIdRouteImport } from './routes/support/$org/c/$chatId'
 
 const OrgRouteRoute = OrgRouteRouteImport.update({
   id: '/$org',
@@ -107,6 +108,11 @@ const AuthSupportSigninRoute = AuthSupportSigninRouteImport.update({
   path: '/auth/support/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SupportOrgCChatIdRoute = SupportOrgCChatIdRouteImport.update({
+  id: '/c/$chatId',
+  path: '/c/$chatId',
+  getParentRoute: () => SupportOrgRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/auth/support/signin': typeof AuthSupportSigninRoute
   '/auth/support/signup': typeof AuthSupportSignupRoute
   '/support/$org/': typeof SupportOrgIndexRoute
+  '/support/$org/c/$chatId': typeof SupportOrgCChatIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/auth/support/signin': typeof AuthSupportSigninRoute
   '/auth/support/signup': typeof AuthSupportSignupRoute
   '/support/$org': typeof SupportOrgIndexRoute
+  '/support/$org/c/$chatId': typeof SupportOrgCChatIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/auth/support/signin': typeof AuthSupportSigninRoute
   '/auth/support/signup': typeof AuthSupportSignupRoute
   '/support/$org/': typeof SupportOrgIndexRoute
+  '/support/$org/c/$chatId': typeof SupportOrgCChatIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/auth/support/signin'
     | '/auth/support/signup'
     | '/support/$org/'
+    | '/support/$org/c/$chatId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/auth/support/signin'
     | '/auth/support/signup'
     | '/support/$org'
+    | '/support/$org/c/$chatId'
   id:
     | '__root__'
     | '/'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/auth/support/signin'
     | '/auth/support/signup'
     | '/support/$org/'
+    | '/support/$org/c/$chatId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -343,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSupportSigninRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/support/$org/c/$chatId': {
+      id: '/support/$org/c/$chatId'
+      path: '/c/$chatId'
+      fullPath: '/support/$org/c/$chatId'
+      preLoaderRoute: typeof SupportOrgCChatIdRouteImport
+      parentRoute: typeof SupportOrgRouteRoute
+    }
   }
 }
 
@@ -368,10 +387,12 @@ const OrgRouteRouteWithChildren = OrgRouteRoute._addFileChildren(
 
 interface SupportOrgRouteRouteChildren {
   SupportOrgIndexRoute: typeof SupportOrgIndexRoute
+  SupportOrgCChatIdRoute: typeof SupportOrgCChatIdRoute
 }
 
 const SupportOrgRouteRouteChildren: SupportOrgRouteRouteChildren = {
   SupportOrgIndexRoute: SupportOrgIndexRoute,
+  SupportOrgCChatIdRoute: SupportOrgCChatIdRoute,
 }
 
 const SupportOrgRouteRouteWithChildren = SupportOrgRouteRoute._addFileChildren(

@@ -3,6 +3,7 @@ using Heydesk.Server.Config;
 using Heydesk.Server.Data.Models;
 using Heydesk.Server.Domains.Document.Workflows;
 using Heydesk.Server.Domains.Notifications;
+using Heydesk.Server.Domains.Agent.Chat;
 using Heydesk.Server.Extensions;
 using Microsoft.AspNetCore.Identity;
 
@@ -60,8 +61,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers().RequireAuthorization();
 app.MapHub<NotificationsHub>("/hubs/notifications").RequireAuthorization();
+app.MapHub<ChatHub>("/hubs/chat");
 
 // Notifications hub exposed at /hubs/notifications
+// Chat hub exposed at /hubs/chat
 
 app.UseExceptionHandler(options => { });
 

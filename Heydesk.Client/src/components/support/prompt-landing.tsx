@@ -1,4 +1,4 @@
-import React, { useState, type FormEvent } from "react";
+import React, { useState } from "react";
 import { AudioWaveformIcon, Send } from "lucide-react";
 import { Logo } from "@/components/logo";
 import {
@@ -7,13 +7,14 @@ import {
   PromptInputTextarea,
   PromptInputToolbar,
   PromptInputTools,
-  type PromptInputMessage,
 } from "../ai-elements/prompt-input";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import Avatar from "boring-avatars";
 import { cn } from "@/lib/utils";
 import { useStore } from "@tanstack/react-store";
 import { customerAuthState } from "@/lib/state/customer.state";
+import { useNavigate } from "@tanstack/react-router";
+import { ChatService } from "@/lib/services/chat.service";
 
 type Props = {
   onSubmit?: (text: string) => void;
@@ -76,6 +77,8 @@ const OrgAvatar = ({ org }: { org: { name: string; url?: string } }) => {
 
 export function PromptLanding({ onSubmit }: Props) {
   const [value, setValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   const [customer, currentOrganizationSlug] = useStore(
     customerAuthState,
     (state) => [state.customer, state.currentOrganization]
@@ -86,11 +89,48 @@ export function PromptLanding({ onSubmit }: Props) {
     (org) => org.slug === currentOrganizationSlug
   );
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
     const v = value.trim();
-    if (!v) return;
-    onSubmit?.(v);
+    if (!v || !customer || !currentOrganization) return;
+
+    setIsLoading(true);
+    try {
+      // Create chat service
+      const chatService = new ChatService({
+        onMessage: () => {},
+        onToken: () => {},
+        onStateChange: () => {},
+        onConnectionChange: () => {},
+      });
+
+      // Start conversation
+      const conversationId = await chatService.startChat(
+        currentOrganization.id,
+        {
+          senderId: customer.id,
+          senderName: customer.username,
+          senderAvatarUrl: customer.avatarUrl,
+        }
+      );
+
+      // Send initial message
+      await chatService.sendMessage(conversationId, v);
+
+      // Navigate to chat page
+      navigate({
+        to: "/support/$org/c/$chatId" as any,
+        params: {
+          org: currentOrganizationSlug,
+          chatId: conversationId,
+        } as any,
+      });
+    } catch (error) {
+      console.error("Failed to start chat:", error);
+      // Fallback to onSubmit if provided
+      onSubmit?.(v);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -115,17 +155,17 @@ export function PromptLanding({ onSubmit }: Props) {
       <div className="w-full max-w-2xl">
         <PromptInput
           className="divide-y-0 rounded-[28px] w-full"
-          onSubmit={function (
-            message: PromptInputMessage,
-            event: FormEvent<HTMLFormElement>
-          ): void {
-            throw new Error("Function not implemented.");
+          onSubmit={(_message, event) => {
+            event.preventDefault();
+            handleSubmit();
           }}
         >
           <PromptInputTextarea
             className="px-5 md:text-base"
-            onChange={(event) => {}}
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
             placeholder="How can I help you?"
+            disabled={isLoading}
           />
           <PromptInputToolbar className="p-2.5">
             <PromptInputTools>
@@ -133,8 +173,8 @@ export function PromptLanding({ onSubmit }: Props) {
                 <DropdownMenuTrigger asChild>
                   <Avatar
                     className="mt-3"
-                    name="eee"
-                    size={28}
+                    name="rrr"
+                    size={24}
                     colors={[
                       "#0ea5e9",
                       "#22c55e",
@@ -156,9 +196,10 @@ export function PromptLanding({ onSubmit }: Props) {
                 <AudioWaveformIcon size={16} />
               </PromptInputButton>
               <PromptInputButton
-                className="rounded-full  font-light "
-                onClick={() => {}}
+                className="rounded-full font-light"
+                onClick={handleSubmit}
                 variant="default"
+                disabled={isLoading || !value.trim()}
               >
                 <Send size={16} />
               </PromptInputButton>

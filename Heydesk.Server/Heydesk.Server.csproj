@@ -20,6 +20,8 @@
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
     <PackageReference Include="TiDB.Vector" Version="1.3.0" />
     <PackageReference Include="TiDB.Vector.AzureOpenAI" Version="1.3.0" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.64.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Agents.Core" Version="1.64.0" />
   </ItemGroup>
 
 </Project>
