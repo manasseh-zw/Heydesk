@@ -17,11 +17,16 @@ import { customerAuthState } from "@/lib/state/customer.state";
 import { Search, Plus } from "lucide-react";
 import { Button } from "../ui/button";
 import { ChatList } from "./chat-list";
+import { useNavigate } from "@tanstack/react-router";
 
 export default function SupportSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const { customer } = useStore(customerAuthState);
+  const navigate = useNavigate();
+  const [customer, currentOrganizationSlug] = useStore(
+    customerAuthState,
+    (state) => [state.customer, state.currentOrganization]
+  );
 
   // Convert customer organizations to org switcher format
   const organizations =
@@ -30,6 +35,15 @@ export default function SupportSidebar({
       slug: org.slug,
       url: org.url,
     })) || [];
+
+  const handleNewChat = () => {
+    if (currentOrganizationSlug) {
+      navigate({
+        to: "/support/$org" as any,
+        params: { org: currentOrganizationSlug } as any,
+      });
+    }
+  };
 
   return (
     <Sidebar
@@ -61,7 +75,12 @@ export default function SupportSidebar({
               <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
               <Input placeholder="Search conversations" className="pl-8" />
             </div>
-            <Button size="icon" variant="default" className="h-8 w-8">
+            <Button
+              size="icon"
+              variant="default"
+              className="h-8 w-8"
+              onClick={handleNewChat}
+            >
               <Plus className="h-4 w-4" />
               <span className="sr-only">New chat</span>
             </Button>

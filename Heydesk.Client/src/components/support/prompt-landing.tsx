@@ -13,6 +13,7 @@ import Avatar from "boring-avatars";
 import { cn } from "@/lib/utils";
 import { useStore } from "@tanstack/react-store";
 import { customerAuthState } from "@/lib/state/customer.state";
+import { chatActions } from "@/lib/state/chat.state";
 import { useNavigate } from "@tanstack/react-router";
 import { ChatService } from "@/lib/services/chat.service";
 
@@ -113,8 +114,8 @@ export function PromptLanding({ onSubmit }: Props) {
         }
       );
 
-      // Send initial message
-      await chatService.sendMessage(conversationId, v);
+      // Set the initial message in chat state
+      chatActions.setPendingInitialMessage(v);
 
       // Navigate to chat page
       navigate({

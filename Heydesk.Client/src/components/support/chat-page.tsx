@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ChatService, type ChatMessage } from "@/lib/services/chat.service";
+import { chatActions } from "@/lib/state/chat.state";
 import {
   Conversation,
   ConversationContent,
@@ -17,9 +18,9 @@ import {
   PromptInputTextarea,
   PromptInputToolbar,
 } from "@/components/ai-elements/prompt-input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send } from "lucide-react";
 import Avatar from "boring-avatars";
+import { ShiningText } from "@/components/shining-text";
 
 interface ChatPageProps {
   chatId: string;
@@ -34,6 +35,7 @@ export function ChatPage({ chatId }: ChatPageProps) {
   const [streamingMessage, setStreamingMessage] = useState<ChatMessage | null>(
     null
   );
+  const [isThinking, setIsThinking] = useState(false);
 
   const chatService = useMemo(
     () =>
@@ -50,6 +52,9 @@ export function ChatPage({ chatId }: ChatPageProps) {
           });
         },
         onToken: (token) => {
+          // Hide thinking indicator when first token arrives
+          setIsThinking(false);
+
           setStreamingMessage((prev) => {
             if (!prev) {
               // Create new streaming message for AI assistant
@@ -87,8 +92,16 @@ export function ChatPage({ chatId }: ChatPageProps) {
       try {
         await chatService.connect();
         await chatService.joinConversation(chatId);
+
+        // Check for pending initial message and send it
+        const pendingMessage = chatActions.consumePendingInitialMessage();
+        if (pendingMessage && pendingMessage.trim()) {
+          setIsThinking(true);
+          await chatService.sendMessage(chatId, pendingMessage.trim());
+        }
       } catch (error) {
         console.error("Failed to connect to chat:", error);
+        setIsThinking(false);
       }
     };
 
@@ -106,12 +119,14 @@ export function ChatPage({ chatId }: ChatPageProps) {
     const messageText = input.trim();
     setInput("");
     setIsLoading(true);
+    setIsThinking(true); // Show thinking indicator
 
     try {
       // Send to backend (do not optimistically append to avoid duplicates)
       await chatService.sendMessage(chatId, messageText);
     } catch (error) {
       console.error("Failed to send message:", error);
+      setIsThinking(false); // Hide thinking on error
     } finally {
       setIsLoading(false);
     }
@@ -128,8 +143,8 @@ export function ChatPage({ chatId }: ChatPageProps) {
     <div className="relative h-full max-w-3xl mx-auto w-full">
       {/* Messages - Scrollable container with bottom padding for input */}
       <div className="absolute inset-0 pb-24">
-        <ScrollArea
-          className="h-full [&>[data-slot=scroll-area-scrollbar]]:hidden"
+        <Conversation
+          className="h-full conversation-container transparent-assistant"
           style={{
             maskImage:
               "linear-gradient(to bottom, transparent 0px, black 24px, black calc(100% - 24px), transparent 100%)",
@@ -137,71 +152,79 @@ export function ChatPage({ chatId }: ChatPageProps) {
               "linear-gradient(to bottom, transparent 0px, black 24px, black calc(100% - 24px), transparent 100%)",
           }}
         >
-          <Conversation className="h-full">
-            <ConversationContent>
-              {[
-                ...messages,
-                ...(streamingMessage ? [streamingMessage] : []),
-              ].map((message) => {
-                const isUser = message.role === "user";
-                const isStreaming = message.id.startsWith("streaming-");
-                return (
-                  <Message
-                    key={message.id}
-                    from={isUser ? "user" : "assistant"}
-                  >
-                    <MessageContent
-                      className={
-                        !isUser
-                          ? isStreaming
-                            ? "bg-gray-50/50 animate-pulse"
-                            : "bg-gray-50/50"
-                          : undefined
-                      }
-                    >
-                      {!isUser && message.role === "assistant" ? (
-                        <Streamdown className="prose prose-sm max-w-none">
-                          {message.content}
-                        </Streamdown>
-                      ) : (
-                        <div className="whitespace-pre-wrap">
-                          {message.content}
-                        </div>
-                      )}
-                    </MessageContent>
-                    {message.sender.avatarUrl ? (
-                      <MessageAvatar
-                        src={message.sender.avatarUrl}
-                        name={message.sender.name}
-                      />
+          <ConversationContent className="mx-1">
+            {[
+              ...messages,
+              ...(streamingMessage ? [streamingMessage] : []),
+              ...(isThinking
+                ? [
+                    {
+                      id: "thinking",
+                      role: "assistant" as const,
+                      content: "",
+                      sender: {
+                        id: "ai-agent",
+                        name: "AI Assistant",
+                        type: "ai-agent" as const,
+                      },
+                      createdAt: new Date().toISOString(),
+                    },
+                  ]
+                : []),
+            ].map((message) => {
+              const isUser = message.role === "user";
+              const isThinkingMessage = message.id === "thinking";
+              return (
+                <Message
+                  key={message.id}
+                  from={isUser ? "user" : "assistant"}
+                  className="items-start"
+                >
+                  <MessageContent className="group-[.is-assistant]:bg-transparent group-[.is-user]:bg-primary/50">
+                    {isThinkingMessage ? (
+                      <ShiningText text="Thinking..." />
+                    ) : !isUser && message.role === "assistant" ? (
+                      <Streamdown className="prose prose-sm max-w-none">
+                        {message.content}
+                      </Streamdown>
                     ) : (
-                      <div className="size-8  rounded-full overflow-hidden">
-                        <Avatar
-                          name={message.sender.name}
-                          size={32}
-                          colors={[
-                            "#0ea5e9",
-                            "#22c55e",
-                            "#f59e0b",
-                            "#6366f1",
-                            "#ec4899",
-                          ]}
-                        />
+                      <div className="whitespace-pre-wrap">
+                        {message.content}
                       </div>
                     )}
-                  </Message>
-                );
-              })}
-            </ConversationContent>
-            <ConversationScrollButton />
-          </Conversation>
-        </ScrollArea>
+                  </MessageContent>
+                  {message.sender.avatarUrl ? (
+                    <MessageAvatar
+                      src={message.sender.avatarUrl}
+                      name={message.sender.name}
+                    />
+                  ) : (
+                    <div className="size-8  rounded-full overflow-hidden">
+                      <Avatar
+                        name={message.sender.name}
+                        size={32}
+                        colors={[
+                          "#0ea5e9",
+                          "#22c55e",
+                          "#f59e0b",
+                          "#6366f1",
+                          "#ec4899",
+                        ]}
+                      />
+                    </div>
+                  )}
+                </Message>
+              );
+            })}
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
       </div>
 
       {/* Input - Fixed at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 bg-background">
+      <div className="absolute bottom-0 left-0 right-0 bg-background px-2">
         <PromptInput
-          className="w-full shadow-xl "
+          className="w-full shadow-xl px-3"
           onSubmit={() => {
             handleSend();
           }}
@@ -212,7 +235,7 @@ export function ChatPage({ chatId }: ChatPageProps) {
             onKeyDown={handleKeyDown}
             placeholder="Type your message..."
             disabled={!isConnected || isLoading}
-            className="min-h-[40px] max-h-[60px] resize-none"
+            className="min-h-[30px] max-h-[60px] resize-none"
           />
           <PromptInputToolbar className="p-2">
             <div className="flex items-center gap-2 ml-auto">

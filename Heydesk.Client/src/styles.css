@@ -499,6 +499,30 @@
 
 @layer utilities {
   .h-screen-minus-sidebar {
-    height: calc(100dvh - var(--app-header-h, 72px));
+    height: calc(100dvh - var(--app-header-h, 68px));
+  }
+  
+  /* Hide scrollbars in conversation */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Target the conversation component specifically */
+  .conversation-container,
+  .conversation-container * {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+  
+  .conversation-container::-webkit-scrollbar,
+  .conversation-container *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 }

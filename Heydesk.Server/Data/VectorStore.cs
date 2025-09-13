@@ -33,7 +33,7 @@ public class VectorStore : IVectorStore
     {
         var result = await _store.SearchAsync(query, 5, new SearchOptions() { Collection = orgId });
 
-        return result.ToList();
+        return [.. result];
     }
 
     public async Task<bool> UpsertAsync(Guid OrgId, string content, MimeType mimeType)
