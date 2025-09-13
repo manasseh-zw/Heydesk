@@ -2,11 +2,13 @@ using System.Text;
 using Heydesk.Server.Config;
 using Heydesk.Server.Data;
 using Heydesk.Server.Data.Models;
+using Heydesk.Server.Domains.Agent.Plugins;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace Heydesk.Server.Domains.Agent.Chat;
 
@@ -17,6 +19,7 @@ public class ChatAgent
     private readonly IHubContext<ChatHub, IChatClient> _hubContext;
     private readonly RepositoryContext _context;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly IVectorStore _vectorStore;
     private readonly Timer _pruneTimer;
 
     private const int MaxSessions = 1000;
@@ -27,13 +30,15 @@ public class ChatAgent
         IHubContext<ChatHub, IChatClient> hubContext,
         RepositoryContext context,
         IServiceScopeFactory serviceScopeFactory,
-        IMemoryCache cache
+        IMemoryCache cache,
+        IVectorStore vectorStore
     )
     {
         _hubContext = hubContext;
         _context = context;
         _serviceScopeFactory = serviceScopeFactory;
         _cache = cache;
+        _vectorStore = vectorStore;
 
         var kernel = Kernel
             .CreateBuilder()
@@ -48,7 +53,7 @@ public class ChatAgent
         {
             Name = "SupportAgent",
             Instructions =
-                "You are a helpful customer support agent. You have access to the organization's knowledge base to help customers with their questions and issues. Be friendly, professional, and helpful. If you cannot resolve an issue, you can escalate it to a human agent.",
+                "You are a helpful customer support agent with access to powerful tools. You can search the organization's knowledge base to find relevant information, create support tickets when issues need tracking, and escalate tickets to human agents when necessary. Always try to help customers using the knowledge base first. Be friendly, professional, and helpful. Use your tools proactively to provide the best support experience.",
             Kernel = kernel,
         };
 
@@ -102,9 +107,37 @@ public class ChatAgent
             var promptHistory = session.History;
             var messageBuffer = new StringBuilder();
 
-            await foreach (var chunk in _agent.InvokeStreamingAsync(promptHistory))
+            // Create a temporary kernel with plugins for this session
+            var sessionKernel = Kernel
+                .CreateBuilder()
+                .AddAzureOpenAIChatCompletion(
+                    apiKey: AppConfig.AzureAI.ApiKey,
+                    endpoint: AppConfig.AzureAI.Endpoint,
+                    deploymentName: "gpt-4.1"
+                )
+                .Build();
+
+            // Create plugins with session context
+            var knowledgeBasePlugin = new KnowledgeBasePlugins(_vectorStore, session.OrganizationId.ToString());
+            var ticketPlugin = new TicketPlugins(_context, session.ConversationId, session.OrganizationId);
+
+            // Add plugins to the session kernel
+            sessionKernel.Plugins.AddFromObject(knowledgeBasePlugin, "KnowledgeBase");
+            sessionKernel.Plugins.AddFromObject(ticketPlugin, "Tickets");
+
+            // Create execution settings with auto function calling
+            var executionSettings = new OpenAIPromptExecutionSettings
             {
-                var token = chunk.Message.Content ?? string.Empty;
+                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+            };
+
+            // Get chat completion service and invoke with function calling
+            var chatService = sessionKernel.GetRequiredService<IChatCompletionService>();
+
+            // Use streaming with function calling enabled
+            await foreach (var chunk in chatService.GetStreamingChatMessageContentsAsync(promptHistory, executionSettings, sessionKernel))
+            {
+                var token = chunk.Content ?? string.Empty;
                 if (token.Length == 0)
                     continue;
 
