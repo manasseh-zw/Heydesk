@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StatusRouteImport } from './routes/status'
 import { Route as OrgRouteRouteImport } from './routes/$org/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SupportIndexRouteImport } from './routes/support/index'
@@ -27,6 +28,11 @@ import { Route as AuthSupportSignupRouteImport } from './routes/auth/support/sig
 import { Route as AuthSupportSigninRouteImport } from './routes/auth/support/signin'
 import { Route as SupportOrgCChatIdRouteImport } from './routes/support/$org/c/$chatId'
 
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrgRouteRoute = OrgRouteRouteImport.update({
   id: '/$org',
   path: '/$org',
@@ -117,6 +123,7 @@ const SupportOrgCChatIdRoute = SupportOrgCChatIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/status': typeof StatusRoute
   '/support/$org': typeof SupportOrgRouteRouteWithChildren
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/analytics': typeof OrgAnalyticsRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/status': typeof StatusRoute
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/analytics': typeof OrgAnalyticsRoute
   '/$org/knowledge-base': typeof OrgKnowledgeBaseRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/status': typeof StatusRoute
   '/support/$org': typeof SupportOrgRouteRouteWithChildren
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/analytics': typeof OrgAnalyticsRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$org'
+    | '/status'
     | '/support/$org'
     | '/$org/agents'
     | '/$org/analytics'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/status'
     | '/$org/agents'
     | '/$org/analytics'
     | '/$org/knowledge-base'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$org'
+    | '/status'
     | '/support/$org'
     | '/$org/agents'
     | '/$org/analytics'
@@ -231,6 +243,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OrgRouteRoute: typeof OrgRouteRouteWithChildren
+  StatusRoute: typeof StatusRoute
   SupportOrgRouteRoute: typeof SupportOrgRouteRouteWithChildren
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
@@ -243,6 +256,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$org': {
       id: '/$org'
       path: '/$org'
@@ -402,6 +422,7 @@ const SupportOrgRouteRouteWithChildren = SupportOrgRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OrgRouteRoute: OrgRouteRouteWithChildren,
+  StatusRoute: StatusRoute,
   SupportOrgRouteRoute: SupportOrgRouteRouteWithChildren,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
