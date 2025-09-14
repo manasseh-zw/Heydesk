@@ -33,7 +33,13 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins(AppConfig.Client.Url)
+                .WithOrigins(
+                    AppConfig.Client.Url,
+                    "https://www.heydesk.cc",
+                    "https://heydesk.cc",
+                    "http://localhost:3000",
+                    "http://localhost:5173"
+                )
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials();
