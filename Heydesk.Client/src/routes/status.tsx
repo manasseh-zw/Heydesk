@@ -36,7 +36,7 @@ function StatusPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${config.serverUrl}/api/health`, {
+      const response = await fetch(`${config.serverUrl}/api/health/basic`, {
         method: "GET",
         credentials: "include",
       });

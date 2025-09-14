@@ -23,25 +23,54 @@ public class HealthController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetHealth()
     {
-        var health = new
+        try
         {
-            Status = "Healthy",
-            Timestamp = DateTime.UtcNow,
-            Services = new
+            var health = new
             {
-                Database = await CheckDatabase(),
-                AzureAI = await CheckAzureAI(),
-                ExaAI = await CheckExaAI()
-            }
-        };
+                Status = "Healthy",
+                Timestamp = DateTime.UtcNow,
+                Services = new
+                {
+                    Database = await CheckDatabase(),
+                    AzureAI = await CheckAzureAI(),
+                    ExaAI = await CheckExaAI()
+                }
+            };
 
-        return Ok(health);
+            return Ok(health);
+        }
+        catch (Exception ex)
+        {
+            return Ok(new
+            {
+                Status = "Unhealthy",
+                Timestamp = DateTime.UtcNow,
+                Error = ex.Message,
+                Services = new
+                {
+                    Database = "Error",
+                    AzureAI = "Error",
+                    ExaAI = "Error"
+                }
+            });
+        }
     }
 
     [HttpGet("simple")]
     public IActionResult GetSimpleHealth()
     {
         return Ok(new { Status = "OK", Timestamp = DateTime.UtcNow });
+    }
+
+    [HttpGet("basic")]
+    public IActionResult GetBasicHealth()
+    {
+        return Ok(new
+        {
+            Status = "OK",
+            Timestamp = DateTime.UtcNow,
+            Message = "Server is running"
+        });
     }
 
     private async Task<string> CheckDatabase()
