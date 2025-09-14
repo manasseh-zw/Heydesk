@@ -2,7 +2,7 @@ namespace Heydesk.Server.Data.Models;
 
 public class OrganizationModel
 {
-    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;

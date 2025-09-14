@@ -2,9 +2,11 @@ namespace Heydesk.Server.Data.Models;
 
 public class ConversationModel
 {
-    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public Guid Id { get; set; }
     public DateTime StartedAt { get; set; } = DateTime.UtcNow;
     public List<MessageModel> Messages { get; set; } = [];
+
+    public string Title { get; set; } = string.Empty;
 
     // Customer relationship
     public Guid CustomerId { get; set; }

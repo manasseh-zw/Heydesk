@@ -2,22 +2,21 @@ using System.Text;
 using Heydesk.Server.Config;
 using Heydesk.Server.Data;
 using Heydesk.Server.Data.Models;
-using Heydesk.Server.Domains.Auth;
-using Heydesk.Server.Domains.Document;
-using Heydesk.Server.Domains.Document.Workflows;
-using Heydesk.Server.Domains.Document.Processors;
-using Heydesk.Server.Integrations;
-using Heydesk.Server.Domains.Organization;
-using Heydesk.Server.Utils;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Heydesk.Server.Domains.Notifications;
 using Heydesk.Server.Domains.Agent;
 using Heydesk.Server.Domains.Agent.Chat;
+using Heydesk.Server.Domains.Auth;
+using Heydesk.Server.Domains.Document;
+using Heydesk.Server.Domains.Document.Processors;
+using Heydesk.Server.Domains.Document.Workflows;
+using Heydesk.Server.Domains.Notifications;
+using Heydesk.Server.Domains.Organization;
 using Heydesk.Server.Domains.Ticket;
+using Heydesk.Server.Integrations;
+using Heydesk.Server.Utils;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Heydesk.Server.Extensions;
 
@@ -27,7 +26,7 @@ public static class ServiceExtensions
     {
         services.AddDbContext<RepositoryContext>(options =>
             options.UseMySql(
-                AppConfig.Database.LocalConnectionString,
+                AppConfig.Database.CloudConnectionString,
                 ServerVersion.AutoDetect(AppConfig.Database.LocalConnectionString)
             )
         );
@@ -42,64 +41,90 @@ public static class ServiceExtensions
                 options.DefaultScheme = "Bearer";
             })
             // Policy scheme decides which bearer to use based on cookies
-            .AddPolicyScheme("Bearer", "Bearer", options =>
-            {
-                options.ForwardDefaultSelector = context =>
+            .AddPolicyScheme(
+                "Bearer",
+                "Bearer",
+                options =>
                 {
-                    var hasCustomer = context.Request.Cookies.ContainsKey(Constants.CustomerAccessTokenCookieName);
-                    return hasCustomer ? "CustomerBearer" : "UserBearer";
-                };
-            })
-            .AddJwtBearer("UserBearer", options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    SaveSigninToken = true,
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = AppConfig.JwtOptions.Issuer,
-                    ValidAudience = AppConfig.JwtOptions.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AppConfig.JwtOptions.Secret)),
-                };
-                options.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = ctx =>
+                    options.ForwardDefaultSelector = context =>
                     {
-                        if (ctx.Request.Cookies.TryGetValue(Constants.AccessTokenCookieName, out var token) && !string.IsNullOrEmpty(token))
-                        {
-                            ctx.Token = token;
-                        }
-                        return Task.CompletedTask;
-                    },
-                };
-            })
-            .AddJwtBearer("CustomerBearer", options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
+                        var hasCustomer = context.Request.Cookies.ContainsKey(
+                            Constants.CustomerAccessTokenCookieName
+                        );
+                        return hasCustomer ? "CustomerBearer" : "UserBearer";
+                    };
+                }
+            )
+            .AddJwtBearer(
+                "UserBearer",
+                options =>
                 {
-                    SaveSigninToken = true,
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = AppConfig.JwtOptions.Issuer,
-                    ValidAudience = AppConfig.JwtOptions.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AppConfig.JwtOptions.Secret)),
-                };
-                options.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = ctx =>
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        if (ctx.Request.Cookies.TryGetValue(Constants.CustomerAccessTokenCookieName, out var token) && !string.IsNullOrEmpty(token))
+                        SaveSigninToken = true,
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = AppConfig.JwtOptions.Issuer,
+                        ValidAudience = AppConfig.JwtOptions.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(AppConfig.JwtOptions.Secret)
+                        ),
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = ctx =>
                         {
-                            ctx.Token = token;
-                        }
-                        return Task.CompletedTask;
-                    },
-                };
-            });
+                            if (
+                                ctx.Request.Cookies.TryGetValue(
+                                    Constants.AccessTokenCookieName,
+                                    out var token
+                                ) && !string.IsNullOrEmpty(token)
+                            )
+                            {
+                                ctx.Token = token;
+                            }
+                            return Task.CompletedTask;
+                        },
+                    };
+                }
+            )
+            .AddJwtBearer(
+                "CustomerBearer",
+                options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        SaveSigninToken = true,
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = AppConfig.JwtOptions.Issuer,
+                        ValidAudience = AppConfig.JwtOptions.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(AppConfig.JwtOptions.Secret)
+                        ),
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = ctx =>
+                        {
+                            if (
+                                ctx.Request.Cookies.TryGetValue(
+                                    Constants.CustomerAccessTokenCookieName,
+                                    out var token
+                                ) && !string.IsNullOrEmpty(token)
+                            )
+                            {
+                                ctx.Token = token;
+                            }
+                            return Task.CompletedTask;
+                        },
+                    };
+                }
+            );
 
         return services;
     }
@@ -122,7 +147,10 @@ public static class ServiceExtensions
 
         // Document services
         services.AddScoped<IDocumentService, DocumentService>();
-        services.AddSingleton<IDocumentIngestEventsQueue<DocumentIngestEvent>, DocumentIngestEventsQueue<DocumentIngestEvent>>();
+        services.AddSingleton<
+            IDocumentIngestEventsQueue<DocumentIngestEvent>,
+            DocumentIngestEventsQueue<DocumentIngestEvent>
+        >();
         services.AddHostedService<DocumentIngestProcessor>();
         services.AddScoped<DocumentIngestEventHandler>();
         services.AddScoped<IDocumentsEvents, DocumentsEvents>();

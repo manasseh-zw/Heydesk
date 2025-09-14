@@ -2,7 +2,7 @@ namespace Heydesk.Server.Data.Models;
 
 public class TicketModel
 {
-    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public Guid Id { get; set; }
     public string Subject { get; set; } = string.Empty;
 
     public string? Context { get; set; }

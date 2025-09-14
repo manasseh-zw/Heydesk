@@ -2,7 +2,7 @@ namespace Heydesk.Server.Data.Models;
 
 public class DocumentModel
 {
-    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public Guid Id { get; set; }
 
     public string Name { get; set; }
 
