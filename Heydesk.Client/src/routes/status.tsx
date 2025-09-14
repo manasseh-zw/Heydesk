@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, CheckCircle, XCircle, Clock } from "lucide-react";
+import { config } from "../../config";
 
 interface HealthStatus {
   status: string;
@@ -35,7 +36,7 @@ function StatusPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch("/api/health", {
+      const response = await fetch(`${config.serverUrl}/api/health`, {
         method: "GET",
         credentials: "include",
       });
