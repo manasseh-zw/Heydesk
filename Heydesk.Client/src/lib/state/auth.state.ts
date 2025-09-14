@@ -2,6 +2,7 @@ import type { User } from "@/lib/types/auth";
 import type { Organization } from "@/lib/types/organization";
 import { Store } from "@tanstack/store";
 import { storage, STORAGE_KEYS } from "@/lib/utils/storage";
+import { clearAuthCookies } from "@/lib/utils";
 
 export type AuthState = {
   user: User | null;
@@ -82,7 +83,8 @@ export const authActions = {
       ...newState,
     }));
     
-    // Clear from localStorage on logout
+    // Clear cookies and localStorage on logout
+    clearAuthCookies();
     storage.remove(STORAGE_KEYS.AUTH_STATE);
   },
   

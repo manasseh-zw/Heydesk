@@ -2,6 +2,7 @@ import { Header } from "@/components/landing/header";
 import { Hero } from "@/components/landing/hero";
 import { getCurrentUser } from "@/lib/services/auth.service";
 import { authActions } from "@/lib/state/auth.state";
+import { clearAuthCookies } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
@@ -10,6 +11,8 @@ export const Route = createFileRoute("/")({
       const user = await getCurrentUser();
       authActions.setUser(user);
     } catch (error) {
+      // Clear any stale cookies when authorization fails
+      clearAuthCookies();
       authActions.clearUser();
     }
   },

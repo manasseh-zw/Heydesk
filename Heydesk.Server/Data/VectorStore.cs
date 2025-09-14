@@ -19,7 +19,7 @@ public class VectorStore : IVectorStore
 
     public VectorStore()
     {
-        _store = new TiDBVectorStoreBuilder(AppConfig.TiDBConnectionString)
+        _store = new TiDBVectorStoreBuilder(AppConfig.Database.VectorConnectionString)
             .WithDefaultCollection("default")
             .WithDistanceFunction(DistanceFunction.Cosine)
             .AddAzureOpenAI(AppConfig.AzureAI.ApiKey, AppConfig.AzureAI.Endpoint)

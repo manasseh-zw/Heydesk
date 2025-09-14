@@ -21,7 +21,9 @@ public static class AppConfig
             Environment.GetEnvironmentVariable("LOCAL_DATABASE")
                 ?? throw new Exception("Local Database Connection String is not set"),
             Environment.GetEnvironmentVariable("CLOUD_DATABASE")
-                ?? throw new Exception("Cloud Database Connection String is not set")
+                ?? throw new Exception("Cloud Database Connection String is not set"),
+            Environment.GetEnvironmentVariable("VECTOR_DATABASE")
+                ?? throw new Exception("Vector Database Connection String is not set")
         );
 
     public static Client Client { get; } =
@@ -53,13 +55,13 @@ public static class AppConfig
             Environment.GetEnvironmentVariable("EXA_AI_APIKEY")
                 ?? throw new Exception("EXA AI APIKEY is not set")
         );
-
-    public static string TiDBConnectionString { get; } =
-        Environment.GetEnvironmentVariable("TIDB_CONN_STRING")
-        ?? throw new Exception("TiDB Vector Connection string is not set");
 }
 
-public record Database(string LocalConnectionString, string CloudConnectionString);
+public record Database(
+    string LocalConnectionString,
+    string CloudConnectionString,
+    string VectorConnectionString
+);
 
 public record Client(string Url);
 
