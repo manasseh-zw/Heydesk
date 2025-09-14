@@ -8,7 +8,7 @@ interface TicketColumnProps {
   onAddTicket?: (columnId: TicketColumnData["id"]) => void;
 }
 
-export function TicketColumn({ column, onAddTicket }: TicketColumnProps) {
+export function TicketColumn({ column }: TicketColumnProps) {
   return (
     <div className="bg-sidebar p-3 dark:bg-neutral-900/20 backdrop-blur-xl rounded-3xl dark:border-neutral-700/50">
       <div className="flex items-center justify-between mb-4 mt-2">

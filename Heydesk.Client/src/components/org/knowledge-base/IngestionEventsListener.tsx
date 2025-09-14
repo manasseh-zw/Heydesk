@@ -4,7 +4,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { authState } from "@/lib/state/auth.state";
 import { notifications } from "@/lib/services/notifications.service";
-import { NotificationType } from "@/lib/types/notifications";
 
 export default function IngestionEventsListener() {
   const { organization } = useStore(authState);
@@ -27,20 +26,24 @@ export default function IngestionEventsListener() {
         joined = true;
       } catch {}
 
-      off = notifications.on(NotificationType.DocumentIngestionUpdated, (n) => {
-        console.log("Document ingestion updated", n);
+      off = notifications.onAny((n) => {
+        console.log("Notification received", n);
 
-        const status = n.payload.status;
-        if (status === "Pending") toast("Starting document ingestion");
-        else if (status === "Processing")
-          toast.info("Document ingestion in progress");
-        else if (status === "Completed")
-          toast.success("Document ingested successfully");
-        else if (status === "Failed") toast.error("Document ingestion failed");
+        // Check if this is a document ingestion notification
+        if (n.title?.includes("Document") || n.message?.includes("ingestion")) {
+          if (n.message?.includes("Starting"))
+            toast("Starting document ingestion");
+          else if (n.message?.includes("progress"))
+            toast.info("Document ingestion in progress");
+          else if (n.message?.includes("success"))
+            toast.success("Document ingested successfully");
+          else if (n.message?.includes("failed"))
+            toast.error("Document ingestion failed");
 
-        queryClient.invalidateQueries({
-          queryKey: ["documents", organization.id],
-        });
+          queryClient.invalidateQueries({
+            queryKey: ["documents", organization.id],
+          });
+        }
       });
     };
     start();

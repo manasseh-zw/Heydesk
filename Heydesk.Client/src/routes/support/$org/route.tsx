@@ -1,4 +1,3 @@
-import { SiteHeader } from "@/components/org/layout/site-header";
 import { SupportHeader } from "@/components/support/support-header";
 import SupportSidebar from "@/components/support/support-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";

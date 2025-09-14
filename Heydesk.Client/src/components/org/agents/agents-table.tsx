@@ -36,7 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { type Agent, AgentType } from "@/lib/types/agent";
+import { type Agent } from "@/lib/types/agent";
 import { type Row } from "@tanstack/react-table";
 import {
   DropdownMenu,

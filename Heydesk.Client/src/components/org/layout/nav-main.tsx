@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusCircleIcon, type LucideIcon } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 
 import {
