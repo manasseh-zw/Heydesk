@@ -1,3 +1,29 @@
+import { apiRequest } from "@/lib/api";
+
+export type SendSupportEmailRequest = {
+  organizationId: string;
+  ticketId: string;
+  to: string;
+  subject: string;
+  htmlBody: string;
+  customerName: string;
+};
+
+export type SendSupportEmailResponse = {
+  sent: boolean;
+};
+
+export const sendSupportEmail = async (
+  organizationId: string,
+  payload: SendSupportEmailRequest
+): Promise<SendSupportEmailResponse> => {
+  const url = `/api/organizations/${organizationId}/notifications/send-support-email`;
+  return apiRequest<SendSupportEmailResponse>(url, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
 import * as signalR from "@microsoft/signalr";
 import { config } from "../../../config";
 

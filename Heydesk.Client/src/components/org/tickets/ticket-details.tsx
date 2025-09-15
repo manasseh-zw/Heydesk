@@ -89,6 +89,8 @@ export function TicketDetails({
           <SendEmailSheet
             defaultSubject={`Re: ${subject}`}
             defaultTo={customer.email}
+            ticketId={_ticketId}
+            customerName={customer.name}
           />
         </CardFooter>
       </Card>

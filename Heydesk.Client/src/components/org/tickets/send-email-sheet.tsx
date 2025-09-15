@@ -16,9 +16,13 @@ import { SendIcon } from "lucide-react";
 export function SendEmailSheet({
   defaultSubject,
   defaultTo,
+  ticketId,
+  customerName,
 }: {
   defaultSubject?: string;
   defaultTo?: string;
+  ticketId: string;
+  customerName: string;
 }) {
   const [subject, setSubject] = useState<string>(defaultSubject || "");
   const [to, setTo] = useState<string>(defaultTo || "");
@@ -77,14 +81,63 @@ export function SendEmailSheet({
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" disabled={!to || !subject || !content.trim()}>
-              <span className="flex items-center gap-2">
-                Send email <SendIcon className="size-4" />
-              </span>
-            </Button>
+            <SendEmailAction
+              ticketId={ticketId}
+              to={to}
+              subject={subject}
+              htmlBody={content}
+              customerName={customerName}
+              disabled={!to || !subject || !content.trim()}
+            />
           </div>
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+import { useMutation } from "@tanstack/react-query";
+import { sendSupportEmail } from "@/lib/services/notifications.service";
+import { authState } from "@/lib/state/auth.state";
+
+function SendEmailAction({
+  ticketId,
+  to,
+  subject,
+  htmlBody,
+  customerName,
+  disabled,
+}: {
+  ticketId: string;
+  to: string;
+  subject: string;
+  htmlBody: string;
+  customerName: string;
+  disabled?: boolean;
+}) {
+  const organizationId = authState.state.organization?.id as string | undefined;
+  const mutation = useMutation({
+    mutationFn: () =>
+      sendSupportEmail(organizationId || "", {
+        organizationId: organizationId || "",
+        ticketId,
+        to,
+        subject,
+        htmlBody,
+        customerName,
+      }),
+  });
+
+  return (
+    <Button
+      type="button"
+      disabled={disabled || mutation.isPending || !organizationId}
+      onClick={() => mutation.mutate()}
+    >
+      <span className="flex items-center gap-2">
+        {mutation.isPending ? "Sending..." : "Send email"}
+        <SendIcon className="size-4" />
+      </span>
+    </Button>
   );
 }
