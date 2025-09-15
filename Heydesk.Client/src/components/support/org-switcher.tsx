@@ -62,6 +62,27 @@ export function OrgSwitcher({ isCollapsed, organizations }: OrgSwitcherProps) {
   const selectedOrg =
     currentOrganization || params?.org || organizations[0]?.slug || "";
 
+  // Sync store with URL param on mount/param change
+  React.useEffect(() => {
+    const urlOrg = params?.org;
+    if (urlOrg && urlOrg !== currentOrganization) {
+      customerAuthActions.setCurrentOrganization(urlOrg);
+    }
+  }, [params?.org]);
+
+  // If organizations list loads later and selected is empty or invalid, pick first
+  React.useEffect(() => {
+    if (!selectedOrg && organizations.length > 0) {
+      customerAuthActions.setCurrentOrganization(organizations[0].slug);
+    } else if (
+      selectedOrg &&
+      organizations.length > 0 &&
+      !organizations.some((o) => o.slug === selectedOrg)
+    ) {
+      customerAuthActions.setCurrentOrganization(organizations[0].slug);
+    }
+  }, [organizations.length]);
+
   const OrgAvatar = ({ org }: { org: { label: string; url?: string } }) => {
     const [useIcon, setUseIcon] = React.useState(true);
     let faviconUrl: string | undefined;
