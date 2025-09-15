@@ -6,8 +6,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CustomerAvatar } from "@/components/org/tickets/customer-avatar";
+import { SendEmailSheet } from "@/components/org/tickets/send-email-sheet";
 import { formatRelative } from "date-fns";
 
 export type TicketDetailsProps = {
@@ -86,9 +86,10 @@ export function TicketDetails({
           )}
         </CardContent>
         <CardFooter className="mt-auto pt-0">
-          <Button className="w-full" variant="default">
-            Send support email
-          </Button>
+          <SendEmailSheet
+            defaultSubject={`Re: ${subject}`}
+            defaultTo={customer.email}
+          />
         </CardFooter>
       </Card>
     </aside>
