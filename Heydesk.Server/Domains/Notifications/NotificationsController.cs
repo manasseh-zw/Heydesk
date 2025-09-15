@@ -14,11 +14,13 @@ public class NotificationsController : ControllerBase
     private readonly RepositoryContext _repository;
     private readonly IEmailService _emailService;
     private readonly ILogger<NotificationsController> _logger;
+    private readonly Heydesk.Server.Domains.Ticket.ITicketService _ticketService;
 
-    public NotificationsController(RepositoryContext repository, IEmailService emailService, ILogger<NotificationsController> logger)
+    public NotificationsController(RepositoryContext repository, IEmailService emailService, Heydesk.Server.Domains.Ticket.ITicketService ticketService, ILogger<NotificationsController> logger)
     {
         _repository = repository;
         _emailService = emailService;
+        _ticketService = ticketService;
         _logger = logger;
     }
 
@@ -52,6 +54,14 @@ public class NotificationsController : ControllerBase
         try
         {
             await _emailService.SendSupportEmailAsync(org.Slug, request.To, request.Subject, html, cancellationToken);
+
+            // Close the ticket after successful email send
+            var closeResult = await _ticketService.CloseTicket(organizationId, request.TicketId);
+            if (!closeResult.Success)
+            {
+                _logger.LogWarning("Email sent but failed to close ticket {TicketId}: {Errors}", request.TicketId, string.Join(", ", closeResult.Errors ?? new List<string>()));
+            }
+
             return Ok(new SendSupportEmailResponse(true));
         }
         catch (Exception ex)

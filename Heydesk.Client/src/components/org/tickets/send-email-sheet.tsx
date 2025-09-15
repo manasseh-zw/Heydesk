@@ -18,20 +18,23 @@ export function SendEmailSheet({
   defaultTo,
   ticketId,
   customerName,
+  disabled,
 }: {
   defaultSubject?: string;
   defaultTo?: string;
   ticketId: string;
   customerName: string;
+  disabled?: boolean;
 }) {
   const [subject, setSubject] = useState<string>(defaultSubject || "");
   const [to, setTo] = useState<string>(defaultTo || "");
   const [content, setContent] = useState<string>("");
+  const [open, setOpen] = useState(false);
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button className="w-full" variant="default">
+        <Button className="w-full" variant="default" disabled={disabled}>
           Send support email
         </Button>
       </SheetTrigger>
@@ -87,7 +90,8 @@ export function SendEmailSheet({
               subject={subject}
               htmlBody={content}
               customerName={customerName}
-              disabled={!to || !subject || !content.trim()}
+              disabled={disabled || !to || !subject || !content.trim()}
+              onSuccess={() => setOpen(false)}
             />
           </div>
         </div>
@@ -96,7 +100,7 @@ export function SendEmailSheet({
   );
 }
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendSupportEmail } from "@/lib/services/notifications.service";
 import { authState } from "@/lib/state/auth.state";
 
@@ -107,6 +111,7 @@ function SendEmailAction({
   htmlBody,
   customerName,
   disabled,
+  onSuccess,
 }: {
   ticketId: string;
   to: string;
@@ -114,8 +119,10 @@ function SendEmailAction({
   htmlBody: string;
   customerName: string;
   disabled?: boolean;
+  onSuccess?: () => void;
 }) {
   const organizationId = authState.state.organization?.id as string | undefined;
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: () =>
       sendSupportEmail(organizationId || "", {
@@ -126,6 +133,17 @@ function SendEmailAction({
         htmlBody,
         customerName,
       }),
+    onSuccess: () => {
+      if (organizationId) {
+        queryClient.invalidateQueries({
+          queryKey: ["ticket-with-conversation", organizationId, ticketId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["tickets", organizationId],
+        });
+      }
+      onSuccess?.();
+    },
   });
 
   return (

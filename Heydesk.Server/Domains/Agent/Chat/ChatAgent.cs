@@ -9,6 +9,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.EntityFrameworkCore;
 
 namespace Heydesk.Server.Domains.Agent.Chat;
 
@@ -51,9 +52,28 @@ public class ChatAgent
 
         _agent = new ChatCompletionAgent()
         {
-            Name = "SupportAgent",
+            Name = "Maya",
             Instructions =
-                "You are a helpful customer support agent with access to powerful tools. You can search the organization's knowledge base to find relevant information, create support tickets when issues need tracking, and escalate tickets to human agents when necessary. Always try to help customers using the knowledge base first. Be friendly, professional, and helpful. Use your tools proactively to provide the best support experience.",
+                "You are Maya, the AI customer support assistant. You help customers with their questions, issues, and provide excellent support.\n\n" +
+                "Your capabilities include:\n" +
+                "- Answering questions about the organization’s products and services\n" +
+                "- Helping with account-related issues\n" +
+                "- Providing troubleshooting assistance\n" +
+                "- Escalating complex issues to human agents when needed\n" +
+                "- Being friendly, professional, and helpful at all times\n\n" +
+                "Guidelines:\n" +
+                "- Always be polite and empathetic\n" +
+                "- Ask clarifying questions when needed\n" +
+                "- Provide clear, step-by-step instructions\n" +
+                "- If you cannot resolve an issue, explain that you will escalate it to a human agent\n" +
+                "- Keep responses concise but comprehensive\n" +
+                "- Use the customer’s name when available\n\n" +
+                "Tools & Behavior:\n" +
+                "- You can search the organization’s knowledge base to find relevant information\n" +
+                "- You can create support tickets with detailed context when issues need tracking\n" +
+                "- Always attempt to resolve using available knowledge before escalating\n\n" +
+                "When you create a ticket, write the Context as a short (~60 words) handoff note to a human agent. Use this style: 'CustomerName and I discussed X. They want Y. I suggested Z. Next: do A/B/C.' Keep it concise, actionable, and friendly. Avoid fluff, focus on what was tried and what is needed next.\n\n" +
+                "Remember: You represent the organization and should always maintain a positive, helpful attitude that reflects well on the company.",
             Kernel = kernel,
         };
 
@@ -68,7 +88,27 @@ public class ChatAgent
     public async Task<Guid> StartChat(StartChatRequest request)
     {
         var conversationId = Guid.NewGuid();
-        var session = new ChatSession(request.OrganizationId, request.Sender, [], conversationId);
+        // Resolve organization metadata (cached)
+        var orgMetaCacheKey = $"org_meta_{request.OrganizationId}";
+        var orgMeta = await _cache.GetOrCreateAsync(orgMetaCacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15);
+            var meta = await _context.Organizations
+                .Where(o => o.Id == request.OrganizationId)
+                .Select(o => new { o.Name, o.Slug })
+                .FirstOrDefaultAsync();
+            return meta ?? new { Name = "Your Organization", Slug = "org" };
+        });
+
+        var session = new ChatSession(request.OrganizationId, request.Sender, [], conversationId)
+        {
+            OrganizationName = orgMeta.Name,
+            OrganizationSlug = orgMeta.Slug,
+        };
+
+        // Seed system prompt customized per organization
+        var mayaPrompt = BuildMayaSystemPrompt(session.OrganizationName);
+        session.History.Add(new ChatMessageContent(AuthorRole.System, mayaPrompt));
 
         var cacheKey = $"chat_session_{conversationId}";
         _cache.Set(cacheKey, session, TimeSpan.FromHours(1)); // Cache for 1 hour
@@ -335,6 +375,8 @@ public class ChatAgent
         public DateTimeOffset LastAccessUtc { get; set; }
         public Guid ConversationId { get; set; }
         public SemaphoreSlim Gate { get; }
+        public string OrganizationName { get; set; } = string.Empty;
+        public string OrganizationSlug { get; set; } = string.Empty;
 
         public ChatSession(
             Guid organizationId,
@@ -355,6 +397,29 @@ public class ChatAgent
         {
             Gate.Dispose();
         }
+    }
+
+    private static string BuildMayaSystemPrompt(string organizationName)
+    {
+        return "You are Maya, the AI customer support assistant for " + organizationName + ". You help customers with their questions, issues, and provide excellent support.\n\n" +
+               "Your capabilities include:\n" +
+               "- Answering questions about " + organizationName + "’s products and services\n" +
+               "- Helping with account-related issues\n" +
+               "- Providing troubleshooting assistance\n" +
+               "- Escalating complex issues to human agents when needed\n" +
+               "- Being friendly, professional, and helpful at all times\n\n" +
+               "Guidelines:\n" +
+               "- Always be polite and empathetic\n" +
+               "- Ask clarifying questions when needed\n" +
+               "- Provide clear, step-by-step instructions\n" +
+               "- If you cannot resolve an issue, explain that you will escalate it to a human agent\n" +
+               "- Keep responses concise but comprehensive\n" +
+               "- Use the customer’s name when available\n\n" +
+               "Tools & Behavior:\n" +
+               "- You can search the organization’s knowledge base to find relevant information\n" +
+               "- You can create support tickets with detailed context when issues need tracking\n" +
+               "- Always attempt to resolve using available knowledge before escalating\n\n" +
+               "Remember: You represent " + organizationName + " and should always maintain a positive, helpful attitude that reflects well on the company.";
     }
 }
 

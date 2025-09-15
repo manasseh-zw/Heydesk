@@ -2,16 +2,16 @@ namespace Heydesk.Server.Integrations;
 
 public static class EmailTemplates
 {
-    public static string SupportResponseTemplate(
-        string organizationName,
-        string organizationSlug,
-        string customerName,
-        string messageHtml
-    )
-    {
-        var year = DateTime.UtcNow.Year;
+  public static string SupportResponseTemplate(
+      string organizationName,
+      string organizationSlug,
+      string customerName,
+      string messageHtml
+  )
+  {
+    var year = DateTime.UtcNow.Year;
 
-        return $"""
+    return $"""
 <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
 <html dir='ltr' lang='en'>
   <head>
@@ -60,7 +60,7 @@ public static class EmailTemplates
   </body>
 </html>
 """;
-    }
+  }
 }
 
 

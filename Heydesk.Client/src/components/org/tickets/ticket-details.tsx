@@ -91,6 +91,7 @@ export function TicketDetails({
             defaultTo={customer.email}
             ticketId={_ticketId}
             customerName={customer.name}
+            disabled={status === "Closed"}
           />
         </CardFooter>
       </Card>

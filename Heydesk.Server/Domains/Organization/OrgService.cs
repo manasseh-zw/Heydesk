@@ -2,6 +2,7 @@ using Heydesk.Server.Data;
 using Heydesk.Server.Data.Models;
 using Heydesk.Server.Domains.User;
 using Heydesk.Server.Domains.Document.Workflows;
+using Heydesk.Server.Domains.Agent;
 using Heydesk.Server.Utils;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,11 +19,13 @@ public class OrgService : IOrgService
 {
     private readonly RepositoryContext _repository;
     private readonly IDocumentsEvents _documentsEvents;
+    private readonly IAgentService _agentService;
 
-    public OrgService(RepositoryContext repository, IDocumentsEvents documentsEvents)
+    public OrgService(RepositoryContext repository, IDocumentsEvents documentsEvents, IAgentService agentService)
     {
         _repository = repository;
         _documentsEvents = documentsEvents;
+        _agentService = agentService;
     }
 
     public async Task<Result<GetOrgResponse>> CreateOrganization(
@@ -69,6 +72,14 @@ public class OrgService : IOrgService
             organization.Url,
             organization.IconUrl
         );
+
+        // Create default Maya agent
+        var mayaResult = await _agentService.CreateDefaultAgent(organization.Id, organization.Name);
+        if (!mayaResult.Success)
+        {
+            // Log the error but don't fail the organization creation
+            Console.WriteLine($"Warning: Failed to create default Maya agent: {string.Join(", ", mayaResult.Errors)}");
+        }
 
         // Enqueue initial URL ingestion if present
         if (!string.IsNullOrWhiteSpace(organization.Url))
