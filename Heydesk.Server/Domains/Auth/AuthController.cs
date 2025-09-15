@@ -140,7 +140,7 @@ public class AuthController : ControllerBase
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Lax,
+                SameSite = SameSiteMode.None, // Changed to None for cross-origin support
                 Expires = DateTimeOffset.UtcNow.AddDays(14),
             }
         );
@@ -155,7 +155,7 @@ public class AuthController : ControllerBase
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Lax,
+                SameSite = SameSiteMode.None, // Changed to None for cross-origin support
                 Expires = DateTimeOffset.UtcNow.AddDays(14),
             }
         );

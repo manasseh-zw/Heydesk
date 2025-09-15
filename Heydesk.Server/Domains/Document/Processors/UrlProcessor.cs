@@ -29,7 +29,7 @@ public class UrlProcessor : IUrlProcessor
                     Query =
                         "Provide a flowing, comprehensive summary for customer support use that covers this page's content from general overview to specific details. Include all factual information (prices, specifications, steps, requirements, limits, contact details, metrics) and summarize any conceptual content. Structure it to read naturally as part of a larger knowledge base, flowing from what this page covers to the specific actionable details agents need, ensuring seamless integration with other page summaries.",
                 },
-                Subpages = 20,
+                Subpages = 30,
                 SubpageTarget =
                 [
                     "products",
