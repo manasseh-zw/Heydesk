@@ -184,6 +184,15 @@ public static class ServiceExtensions
         // Ticket services
         services.AddScoped<ITicketService, TicketService>();
 
+        // Email / Resend using AppConfig
+        services.AddHttpClient<Resend.ResendClient>();
+        services.Configure<Resend.ResendClientOptions>(o =>
+        {
+            o.ApiToken = AppConfig.Resend.ApiKey;
+        });
+        services.AddTransient<Resend.IResend, Resend.ResendClient>();
+        services.AddScoped<IEmailService, EmailService>();
+
         return services;
     }
 

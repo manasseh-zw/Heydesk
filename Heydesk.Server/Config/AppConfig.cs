@@ -55,6 +55,12 @@ public static class AppConfig
             Environment.GetEnvironmentVariable("EXA_AI_APIKEY")
                 ?? throw new Exception("EXA AI APIKEY is not set")
         );
+
+    public static Resend Resend { get; } =
+        new(
+            Environment.GetEnvironmentVariable("RESEND_APIKEY")
+                ?? throw new Exception("RESEND APIKEY is not set")
+        );
 }
 
 public record Database(
@@ -70,3 +76,5 @@ public record AzureAI(string Endpoint, string ApiKey);
 public record JwtOptions(string Secret, string Issuer, string Audience);
 
 public record ExaAI(string ApiKey);
+
+public record Resend(string ApiKey);
