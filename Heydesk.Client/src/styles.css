@@ -501,6 +501,10 @@
   .h-screen-minus-sidebar {
     height: calc(100dvh - var(--app-header-h, 68px));
   }
+
+  .h-screen-minus-sidebar-minus-header {
+    height: calc(100dvh - var(--app-header-h, 68px) - var(--sidebar-h, 68px));
+  }
   
   /* Hide scrollbars in conversation */
   .hide-scrollbar {

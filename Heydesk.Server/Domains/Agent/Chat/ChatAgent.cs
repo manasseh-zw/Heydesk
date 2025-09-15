@@ -118,8 +118,15 @@ public class ChatAgent
                 .Build();
 
             // Create plugins with session context
-            var knowledgeBasePlugin = new KnowledgeBasePlugins(_vectorStore, session.OrganizationId.ToString());
-            var ticketPlugin = new TicketPlugins(_context, session.ConversationId, session.OrganizationId);
+            var knowledgeBasePlugin = new KnowledgeBasePlugins(
+                _vectorStore,
+                session.OrganizationId.ToString()
+            );
+            var ticketPlugin = new TicketPlugins(
+                _context,
+                session.ConversationId,
+                session.OrganizationId
+            );
 
             // Add plugins to the session kernel
             sessionKernel.Plugins.AddFromObject(knowledgeBasePlugin, "KnowledgeBase");
@@ -128,14 +135,20 @@ public class ChatAgent
             // Create execution settings with auto function calling
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
             };
 
             // Get chat completion service and invoke with function calling
             var chatService = sessionKernel.GetRequiredService<IChatCompletionService>();
 
             // Use streaming with function calling enabled
-            await foreach (var chunk in chatService.GetStreamingChatMessageContentsAsync(promptHistory, executionSettings, sessionKernel))
+            await foreach (
+                var chunk in chatService.GetStreamingChatMessageContentsAsync(
+                    promptHistory,
+                    executionSettings,
+                    sessionKernel
+                )
+            )
             {
                 var token = chunk.Content ?? string.Empty;
                 if (token.Length == 0)
@@ -290,7 +303,7 @@ public class ChatAgent
                 ConversationId = conversationId,
                 SenderType = SenderType.AiAgent,
                 SenderId = null, // AI agent doesn't have a specific ID
-                SenderName = "AI Assistant",
+                SenderName = "Maya",
                 SenderAvatarUrl = null,
                 Content = assistantResponse,
                 Timestamp = DateTime.UtcNow,

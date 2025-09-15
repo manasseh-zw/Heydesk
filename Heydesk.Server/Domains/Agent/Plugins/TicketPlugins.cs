@@ -20,17 +20,22 @@ public class TicketPlugins
     }
 
     [KernelFunction]
-    [Description("Creates a support ticket from the current conversation when the issue requires escalation or tracking. Use this when the customer's issue cannot be resolved immediately through knowledge base or requires follow-up.")]
+    [Description(
+        "Creates a support ticket from the current conversation when the issue requires escalation or tracking. Use this when the customer's issue cannot be resolved immediately through knowledge base or requires follow-up."
+    )]
     public async Task<string> CreateTicket(
         [Description("A brief subject line summarizing the customer's issue")] string subject,
-        [Description("Additional context about the issue, including any troubleshooting steps already attempted")] string context = ""
+        [Description(
+            "Additional context about the issue, including any troubleshooting steps already attempted"
+        )]
+            string context = ""
     )
     {
         try
         {
             // Check if conversation exists and doesn't already have a ticket
-            var conversation = await _repository.Conversations
-                .Include(c => c.Customer)
+            var conversation = await _repository
+                .Conversations.Include(c => c.Customer)
                 .FirstOrDefaultAsync(c => c.Id == _conversationId);
 
             if (conversation == null)
@@ -43,15 +48,25 @@ public class TicketPlugins
                 return "Error: This conversation already has an associated ticket.";
             }
 
+            // Find the first user in the organization to assign the ticket to
+            var assignedUser = await _repository.Users.FirstOrDefaultAsync(u =>
+                u.OrganizationId == _organizationId
+            );
+
+            if (assignedUser == null)
+            {
+                return "Error: No human agents available in this organization. Please contact support directly.";
+            }
+
             var ticket = new TicketModel
             {
                 Subject = subject,
                 Context = context,
-                Status = TicketStatus.Open,
+                Status = TicketStatus.Escalated,
                 OrganizationId = _organizationId,
                 CustomerId = conversation.CustomerId,
                 ConversationId = _conversationId,
-                AssignedTo = Guid.Empty // Will be assigned to a human agent later
+                AssignedTo = assignedUser.Id,
             };
 
             _repository.Tickets.Add(ticket);
@@ -61,7 +76,7 @@ public class TicketPlugins
 
             await _repository.SaveChangesAsync();
 
-            return $"Ticket created successfully with ID: {ticket.Id}. The ticket has been assigned to our support team and you will receive updates via email. Reference number: {ticket.Id.ToString()[..8]}.";
+            return $"Ticket created and escalated successfully with ID: {ticket.Id}. Assigned to {assignedUser.Username}. You will receive updates via email. Reference number: {ticket.Id.ToString()[..8]}.";
         }
         catch (Exception ex)
         {
@@ -70,61 +85,9 @@ public class TicketPlugins
     }
 
     [KernelFunction]
-    [Description("Escalates an existing ticket to a human agent when the AI cannot resolve the customer's issue. Use this when the issue is complex, requires human judgment, or the customer specifically requests human assistance.")]
-    public async Task<string> EscalateTicket(
-        [Description("The unique identifier of the ticket to escalate")] string ticketId,
-        [Description("Reason for escalation and summary of what has been attempted so far")] string escalationReason
-    )
-    {
-        try
-        {
-            var ticketGuid = Guid.Parse(ticketId);
-
-            var ticket = await _repository.Tickets
-                .Include(t => t.Customer)
-                .Include(t => t.Organization)
-                .FirstOrDefaultAsync(t => t.Id == ticketGuid);
-
-            if (ticket == null)
-            {
-                return "Error: Ticket not found. Cannot escalate.";
-            }
-
-            if (ticket.Status == TicketStatus.Escalated)
-            {
-                return "This ticket has already been escalated to our human support team.";
-            }
-
-            // Find the first user in the organization to assign the ticket to
-            var assignedUser = await _repository.Users
-                .FirstOrDefaultAsync(u => u.OrganizationId == _organizationId);
-
-            if (assignedUser == null)
-            {
-                return "Error: No human agents available in this organization. Please contact support directly.";
-            }
-
-            // Update ticket status to escalated and assign to human agent
-            ticket.Status = TicketStatus.Escalated;
-            ticket.AssignedTo = assignedUser.Id;
-
-            // Update context with escalation reason
-            ticket.Context = string.IsNullOrEmpty(ticket.Context)
-                ? $"Escalated: {escalationReason}"
-                : $"{ticket.Context}\n\nEscalated: {escalationReason}";
-
-            await _repository.SaveChangesAsync();
-
-            return $"Ticket {ticketId[..8]} has been escalated to our human support team and assigned to {assignedUser.Username}. A specialist will review your case and respond within 24 hours. You will be notified via email when there are updates.";
-        }
-        catch (Exception ex)
-        {
-            return $"Error escalating ticket: {ex.Message}. Your issue is important to us - please contact our support team directly.";
-        }
-    }
-
-    [KernelFunction]
-    [Description("Retrieves the current status and details of an existing ticket. Use this when customers ask about their ticket status or need updates.")]
+    [Description(
+        "Retrieves the current status and details of an existing ticket. Use this when customers ask about their ticket status or need updates."
+    )]
     public async Task<string> GetTicketStatus(
         [Description("The unique identifier of the ticket to check")] string ticketId
     )
@@ -133,8 +96,8 @@ public class TicketPlugins
         {
             var ticketGuid = Guid.Parse(ticketId);
 
-            var ticket = await _repository.Tickets
-                .Include(t => t.Customer)
+            var ticket = await _repository
+                .Tickets.Include(t => t.Customer)
                 .Include(t => t.Organization)
                 .FirstOrDefaultAsync(t => t.Id == ticketGuid);
 
@@ -147,8 +110,9 @@ public class TicketPlugins
             UserModel? assignedUser = null;
             if (ticket.Status == TicketStatus.Escalated && ticket.AssignedTo != Guid.Empty)
             {
-                assignedUser = await _repository.Users
-                    .FirstOrDefaultAsync(u => u.Id == ticket.AssignedTo);
+                assignedUser = await _repository.Users.FirstOrDefaultAsync(u =>
+                    u.Id == ticket.AssignedTo
+                );
             }
 
             var statusMessage = ticket.Status switch
@@ -157,16 +121,21 @@ public class TicketPlugins
                 TicketStatus.Escalated => assignedUser != null
                     ? $"Your ticket has been escalated to our human support team and assigned to {assignedUser.Username}."
                     : "Your ticket has been escalated to our human support team for specialized assistance.",
-                TicketStatus.Closed => $"Your ticket was resolved and closed on {ticket.ClosedAt:yyyy-MM-dd HH:mm}.",
-                _ => "Unknown status"
+                TicketStatus.Closed =>
+                    $"Your ticket was resolved and closed on {ticket.ClosedAt:yyyy-MM-dd HH:mm}.",
+                _ => "Unknown status",
             };
 
-            return $"Ticket #{ticketId[..8]}\n" +
-                   $"Subject: {ticket.Subject}\n" +
-                   $"Status: {ticket.Status}\n" +
-                   $"Opened: {ticket.OpenedAt:yyyy-MM-dd HH:mm}\n" +
-                   $"{statusMessage}\n" +
-                   (!string.IsNullOrEmpty(ticket.Context) ? $"\nAdditional Context: {ticket.Context}" : "");
+            return $"Ticket #{ticketId[..8]}\n"
+                + $"Subject: {ticket.Subject}\n"
+                + $"Status: {ticket.Status}\n"
+                + $"Opened: {ticket.OpenedAt:yyyy-MM-dd HH:mm}\n"
+                + $"{statusMessage}\n"
+                + (
+                    !string.IsNullOrEmpty(ticket.Context)
+                        ? $"\nAdditional Context: {ticket.Context}"
+                        : ""
+                );
         }
         catch (Exception ex)
         {

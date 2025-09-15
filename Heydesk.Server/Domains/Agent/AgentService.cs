@@ -8,7 +8,11 @@ namespace Heydesk.Server.Domains.Agent;
 public interface IAgentService
 {
     Task<Result<GetAgentResponse>> CreateAgent(Guid organizationId, CreateAgentRequest request);
-    Task<Result<List<GetAgentResponse>>> GetAgents(Guid organizationId, int page = 1, int pageSize = 10);
+    Task<Result<List<GetAgentResponse>>> GetAgents(
+        Guid organizationId,
+        int page = 1,
+        int pageSize = 10
+    );
 }
 
 public class AgentService : IAgentService
@@ -20,7 +24,10 @@ public class AgentService : IAgentService
         _repository = repository;
     }
 
-    public async Task<Result<GetAgentResponse>> CreateAgent(Guid organizationId, CreateAgentRequest request)
+    public async Task<Result<GetAgentResponse>> CreateAgent(
+        Guid organizationId,
+        CreateAgentRequest request
+    )
     {
         var validation = new CreateAgentValidator().Validate(request);
         if (!validation.IsValid)
@@ -55,14 +62,18 @@ public class AgentService : IAgentService
         return Result.Ok(response);
     }
 
-    public async Task<Result<List<GetAgentResponse>>> GetAgents(Guid organizationId, int page = 1, int pageSize = 10)
+    public async Task<Result<List<GetAgentResponse>>> GetAgents(
+        Guid organizationId,
+        int page = 1,
+        int pageSize = 10
+    )
     {
         var orgExists = await _repository.Organizations.AnyAsync(o => o.Id == organizationId);
         if (!orgExists)
             return Result.Fail("Organization not found");
 
-        var agents = await _repository.Agents
-            .Where(a => a.OrganizationId == organizationId)
+        var agents = await _repository
+            .Agents.Where(a => a.OrganizationId == organizationId)
             .OrderBy(a => a.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -80,5 +91,3 @@ public class AgentService : IAgentService
         return Result.Ok(agents);
     }
 }
-
-

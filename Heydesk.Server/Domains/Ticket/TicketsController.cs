@@ -23,6 +23,15 @@ public class TicketsController : ControllerBase
             return BadRequest(result.Errors);
         return Ok(result.Data);
     }
+
+    [HttpGet("{ticketId:guid}/with-conversation")]
+    public async Task<IActionResult> GetTicketWithConversation([FromRoute] Guid organizationId, [FromRoute] Guid ticketId)
+    {
+        var result = await _ticketService.GetTicketWithConversation(organizationId, ticketId);
+        if (!result.Success)
+            return BadRequest(result.Errors);
+        return Ok(result.Data);
+    }
 }
 
 

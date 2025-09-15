@@ -24,8 +24,10 @@ import { Route as OrgAnalyticsRouteImport } from './routes/$org/analytics'
 import { Route as OrgAgentsRouteImport } from './routes/$org/agents'
 import { Route as SupportOrgRouteRouteImport } from './routes/support/$org/route'
 import { Route as SupportOrgIndexRouteImport } from './routes/support/$org/index'
+import { Route as OrgTicketsIndexRouteImport } from './routes/$org/tickets/index'
 import { Route as AuthSupportSignupRouteImport } from './routes/auth/support/signup'
 import { Route as AuthSupportSigninRouteImport } from './routes/auth/support/signin'
+import { Route as OrgTicketsTicketIdRouteImport } from './routes/$org/tickets/$ticketId'
 import { Route as SupportOrgCChatIdRouteImport } from './routes/support/$org/c/$chatId'
 
 const StatusRoute = StatusRouteImport.update({
@@ -104,6 +106,11 @@ const SupportOrgIndexRoute = SupportOrgIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SupportOrgRouteRoute,
 } as any)
+const OrgTicketsIndexRoute = OrgTicketsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OrgTicketsRoute,
+} as any)
 const AuthSupportSignupRoute = AuthSupportSignupRouteImport.update({
   id: '/auth/support/signup',
   path: '/auth/support/signup',
@@ -113,6 +120,11 @@ const AuthSupportSigninRoute = AuthSupportSigninRouteImport.update({
   id: '/auth/support/signin',
   path: '/auth/support/signin',
   getParentRoute: () => rootRouteImport,
+} as any)
+const OrgTicketsTicketIdRoute = OrgTicketsTicketIdRouteImport.update({
+  id: '/$ticketId',
+  path: '/$ticketId',
+  getParentRoute: () => OrgTicketsRoute,
 } as any)
 const SupportOrgCChatIdRoute = SupportOrgCChatIdRouteImport.update({
   id: '/c/$chatId',
@@ -128,15 +140,17 @@ export interface FileRoutesByFullPath {
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/analytics': typeof OrgAnalyticsRoute
   '/$org/knowledge-base': typeof OrgKnowledgeBaseRoute
-  '/$org/tickets': typeof OrgTicketsRoute
+  '/$org/tickets': typeof OrgTicketsRouteWithChildren
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
   '/onboarding/select-organization': typeof OnboardingSelectOrganizationRoute
   '/$org/': typeof OrgIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
   '/support': typeof SupportIndexRoute
+  '/$org/tickets/$ticketId': typeof OrgTicketsTicketIdRoute
   '/auth/support/signin': typeof AuthSupportSigninRoute
   '/auth/support/signup': typeof AuthSupportSignupRoute
+  '/$org/tickets/': typeof OrgTicketsIndexRoute
   '/support/$org/': typeof SupportOrgIndexRoute
   '/support/$org/c/$chatId': typeof SupportOrgCChatIdRoute
 }
@@ -146,15 +160,16 @@ export interface FileRoutesByTo {
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/analytics': typeof OrgAnalyticsRoute
   '/$org/knowledge-base': typeof OrgKnowledgeBaseRoute
-  '/$org/tickets': typeof OrgTicketsRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
   '/onboarding/select-organization': typeof OnboardingSelectOrganizationRoute
   '/$org': typeof OrgIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
   '/support': typeof SupportIndexRoute
+  '/$org/tickets/$ticketId': typeof OrgTicketsTicketIdRoute
   '/auth/support/signin': typeof AuthSupportSigninRoute
   '/auth/support/signup': typeof AuthSupportSignupRoute
+  '/$org/tickets': typeof OrgTicketsIndexRoute
   '/support/$org': typeof SupportOrgIndexRoute
   '/support/$org/c/$chatId': typeof SupportOrgCChatIdRoute
 }
@@ -167,15 +182,17 @@ export interface FileRoutesById {
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/analytics': typeof OrgAnalyticsRoute
   '/$org/knowledge-base': typeof OrgKnowledgeBaseRoute
-  '/$org/tickets': typeof OrgTicketsRoute
+  '/$org/tickets': typeof OrgTicketsRouteWithChildren
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
   '/onboarding/select-organization': typeof OnboardingSelectOrganizationRoute
   '/$org/': typeof OrgIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/support/': typeof SupportIndexRoute
+  '/$org/tickets/$ticketId': typeof OrgTicketsTicketIdRoute
   '/auth/support/signin': typeof AuthSupportSigninRoute
   '/auth/support/signup': typeof AuthSupportSignupRoute
+  '/$org/tickets/': typeof OrgTicketsIndexRoute
   '/support/$org/': typeof SupportOrgIndexRoute
   '/support/$org/c/$chatId': typeof SupportOrgCChatIdRoute
 }
@@ -196,8 +213,10 @@ export interface FileRouteTypes {
     | '/$org/'
     | '/onboarding'
     | '/support'
+    | '/$org/tickets/$ticketId'
     | '/auth/support/signin'
     | '/auth/support/signup'
+    | '/$org/tickets/'
     | '/support/$org/'
     | '/support/$org/c/$chatId'
   fileRoutesByTo: FileRoutesByTo
@@ -207,15 +226,16 @@ export interface FileRouteTypes {
     | '/$org/agents'
     | '/$org/analytics'
     | '/$org/knowledge-base'
-    | '/$org/tickets'
     | '/auth/signin'
     | '/auth/signup'
     | '/onboarding/select-organization'
     | '/$org'
     | '/onboarding'
     | '/support'
+    | '/$org/tickets/$ticketId'
     | '/auth/support/signin'
     | '/auth/support/signup'
+    | '/$org/tickets'
     | '/support/$org'
     | '/support/$org/c/$chatId'
   id:
@@ -234,8 +254,10 @@ export interface FileRouteTypes {
     | '/$org/'
     | '/onboarding/'
     | '/support/'
+    | '/$org/tickets/$ticketId'
     | '/auth/support/signin'
     | '/auth/support/signup'
+    | '/$org/tickets/'
     | '/support/$org/'
     | '/support/$org/c/$chatId'
   fileRoutesById: FileRoutesById
@@ -361,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupportOrgIndexRouteImport
       parentRoute: typeof SupportOrgRouteRoute
     }
+    '/$org/tickets/': {
+      id: '/$org/tickets/'
+      path: '/'
+      fullPath: '/$org/tickets/'
+      preLoaderRoute: typeof OrgTicketsIndexRouteImport
+      parentRoute: typeof OrgTicketsRoute
+    }
     '/auth/support/signup': {
       id: '/auth/support/signup'
       path: '/auth/support/signup'
@@ -375,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSupportSigninRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$org/tickets/$ticketId': {
+      id: '/$org/tickets/$ticketId'
+      path: '/$ticketId'
+      fullPath: '/$org/tickets/$ticketId'
+      preLoaderRoute: typeof OrgTicketsTicketIdRouteImport
+      parentRoute: typeof OrgTicketsRoute
+    }
     '/support/$org/c/$chatId': {
       id: '/support/$org/c/$chatId'
       path: '/c/$chatId'
@@ -385,11 +421,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface OrgTicketsRouteChildren {
+  OrgTicketsTicketIdRoute: typeof OrgTicketsTicketIdRoute
+  OrgTicketsIndexRoute: typeof OrgTicketsIndexRoute
+}
+
+const OrgTicketsRouteChildren: OrgTicketsRouteChildren = {
+  OrgTicketsTicketIdRoute: OrgTicketsTicketIdRoute,
+  OrgTicketsIndexRoute: OrgTicketsIndexRoute,
+}
+
+const OrgTicketsRouteWithChildren = OrgTicketsRoute._addFileChildren(
+  OrgTicketsRouteChildren,
+)
+
 interface OrgRouteRouteChildren {
   OrgAgentsRoute: typeof OrgAgentsRoute
   OrgAnalyticsRoute: typeof OrgAnalyticsRoute
   OrgKnowledgeBaseRoute: typeof OrgKnowledgeBaseRoute
-  OrgTicketsRoute: typeof OrgTicketsRoute
+  OrgTicketsRoute: typeof OrgTicketsRouteWithChildren
   OrgIndexRoute: typeof OrgIndexRoute
 }
 
@@ -397,7 +447,7 @@ const OrgRouteRouteChildren: OrgRouteRouteChildren = {
   OrgAgentsRoute: OrgAgentsRoute,
   OrgAnalyticsRoute: OrgAnalyticsRoute,
   OrgKnowledgeBaseRoute: OrgKnowledgeBaseRoute,
-  OrgTicketsRoute: OrgTicketsRoute,
+  OrgTicketsRoute: OrgTicketsRouteWithChildren,
   OrgIndexRoute: OrgIndexRoute,
 }
 

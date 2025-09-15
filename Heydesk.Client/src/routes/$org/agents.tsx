@@ -41,7 +41,7 @@ function RouteComponent() {
             }}
             onClick={handleCreateChatAgent}
           />
-          <ActionCard
+          {/* <ActionCard
             title="Add Voice Agent"
             icon={<AudioLines size={22} />}
             className="hover:bg-transparent "
@@ -51,7 +51,7 @@ function RouteComponent() {
                 "radial-gradient(at 10% 20%, hsla(33, 100%, 83%, 0.18) 0px, transparent 50%), radial-gradient(at 90% 10%, hsla(333, 100%, 85%, 0.30) 0px, transparent 50%), radial-gradient(at 50% 90%, hsla(213, 100%, 85%, 0.14) 0px, transparent 50%)",
             }}
             onClick={handleCreateVoiceAgent}
-          />
+          /> */}
         </div>
         <AgentsTable />
       </div>

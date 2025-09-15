@@ -1,4 +1,5 @@
 using Heydesk.Server.Data.Models;
+using Heydesk.Server.Domains.Conversation;
 
 namespace Heydesk.Server.Domains.Ticket;
 
@@ -15,6 +16,13 @@ public record AssignedToInfo(
     AssignedEntityType Type
 );
 
+public record CustomerInfo(
+    Guid Id,
+    string Name,
+    string Email,
+    string? AvatarUrl
+);
+
 public record GetTicketsRequest(int Page = 1, int PageSize = 10);
 
 public record GetTicketResponse(
@@ -24,7 +32,8 @@ public record GetTicketResponse(
     TicketStatus Status,
     DateTime OpenedAt,
     DateTime? ClosedAt,
-    AssignedToInfo? AssignedTo
+    AssignedToInfo? AssignedTo,
+    CustomerInfo Customer
 );
 
 public record GetTicketsResponse(List<GetTicketResponse> Tickets, int TotalCount);
@@ -33,6 +42,11 @@ public record CreateTicketRequest(
     Guid CustomerId,
     string Subject,
     string? Context
+);
+
+public record GetTicketWithConversationResponse(
+    GetTicketResponse Ticket,
+    GetConversationResponse Conversation
 );
 
 

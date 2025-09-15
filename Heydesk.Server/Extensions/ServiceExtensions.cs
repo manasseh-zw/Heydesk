@@ -25,11 +25,21 @@ public static class ServiceExtensions
     public static IServiceCollection ConfigureDatabase(this IServiceCollection services)
     {
         services.AddDbContext<RepositoryContext>(options =>
-            options.UseMySql(
-                AppConfig.Database.CloudConnectionString,
-                ServerVersion.AutoDetect(AppConfig.Database.LocalConnectionString)
-            )
-        );
+        {
+            var isDevelopment = string.Equals(
+                Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+                "Development",
+                StringComparison.OrdinalIgnoreCase
+            );
+
+            var connectionString = isDevelopment
+                ? AppConfig.Database.LocalConnectionString
+                : AppConfig.Database.CloudConnectionString;
+
+            options.UseNpgsql(
+                connectionString
+            );
+        });
         return services;
     }
 

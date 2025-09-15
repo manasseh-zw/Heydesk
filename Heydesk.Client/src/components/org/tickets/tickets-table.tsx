@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -202,7 +203,7 @@ const columns: ColumnDef<TicketRow>[] = [
     header: "Opened",
     accessorKey: "openedAt",
     cell: ({ row }) => new Date(row.original.openedAt).toLocaleString(),
-    size: 200,
+    size: 170,
   },
   {
     header: "Closed",
@@ -211,7 +212,7 @@ const columns: ColumnDef<TicketRow>[] = [
       row.original.closedAt
         ? new Date(row.original.closedAt).toLocaleString()
         : "—",
-    size: 200,
+    size: 170,
   },
   {
     id: "actions",
@@ -645,8 +646,9 @@ export default function TicketsTable() {
 }
 
 function TicketRowActions({ row }: { row: Row<TicketRow> }) {
+  const navigate = useNavigate();
   const handleView = () => {
-    console.log("View ticket:", row.original.id);
+    navigate({ to: "./$ticketId", params: { ticketId: row.original.id } });
   };
 
   const handleMarkAsClosed = () => {
@@ -674,17 +676,16 @@ function TicketRowActions({ row }: { row: Row<TicketRow> }) {
             View
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        {row.original.status !== "Closed" && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={handleMarkAsClosed}>
-                <XIcon size={16} className="mr-2" />
-                Mark as Closed
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </>
-        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            onClick={handleMarkAsClosed}
+            disabled={row.original.status === "Closed"}
+          >
+            <XIcon size={16} className="mr-2" />
+            Close
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

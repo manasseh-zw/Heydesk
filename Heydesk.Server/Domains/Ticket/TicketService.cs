@@ -11,8 +11,9 @@ public interface ITicketService
 
     // Internal methods for AI agent usage (not exposed via controller)
     Task<Result<GetTicketResponse>> CreateTicket(Guid organizationId, CreateTicketRequest request);
-    Task<Result<GetTicketResponse>> EscalateTicket(Guid organizationId, Guid ticketId);
     Task<Result<GetTicketResponse>> CloseTicket(Guid organizationId, Guid ticketId);
+
+    Task<Result<GetTicketWithConversationResponse>> GetTicketWithConversation(Guid organizationId, Guid ticketId);
 }
 
 public class TicketService : ITicketService
@@ -26,12 +27,92 @@ public class TicketService : ITicketService
         _logger = logger;
     }
 
+    public async Task<Result<GetTicketWithConversationResponse>> GetTicketWithConversation(Guid organizationId, Guid ticketId)
+    {
+        try
+        {
+            var ticket = await _repository.Tickets
+                .Include(t => t.Conversation)
+                .Include(t => t.Customer)
+                .FirstOrDefaultAsync(t => t.Id == ticketId && t.OrganizationId == organizationId);
+
+            if (ticket == null)
+                return Result.Fail("Ticket not found");
+
+            // Load messages ordered by time
+            var messages = await _repository.Messages
+                .Where(m => m.ConversationId == ticket.ConversationId)
+                .OrderBy(m => m.Timestamp)
+                .Select(m => new Domains.Conversation.MessageResponse(
+                    m.Id,
+                    m.Timestamp,
+                    m.SenderType,
+                    m.SenderId,
+                    m.SenderName,
+                    m.SenderAvatarUrl,
+                    m.Content
+                ))
+                .ToListAsync();
+
+            AssignedToInfo? assigned = null;
+            if (ticket.AssignedTo != Guid.Empty)
+            {
+                var user = await _repository.Users
+                    .Where(u => u.Id == ticket.AssignedTo)
+                    .Select(u => new { u.Id, Name = u.Username, u.AvatarUrl })
+                    .FirstOrDefaultAsync();
+                if (user != null)
+                {
+                    assigned = new AssignedToInfo(user.Id, user.Name, user.AvatarUrl, AssignedEntityType.HumanAgent);
+                }
+                else
+                {
+                    var agent = await _repository.Agents
+                        .Where(a => a.Id == ticket.AssignedTo)
+                        .Select(a => new { a.Id, a.Name })
+                        .FirstOrDefaultAsync();
+                    if (agent != null)
+                        assigned = new AssignedToInfo(agent.Id, agent.Name, null, AssignedEntityType.AiAgent);
+                }
+            }
+
+            var ticketDto = new GetTicketResponse(
+                ticket.Id,
+                ticket.Subject,
+                ticket.Context,
+                ticket.Status,
+                ticket.OpenedAt,
+                ticket.ClosedAt,
+                assigned,
+                new CustomerInfo(
+                    ticket.CustomerId,
+                    ticket.Customer.Username,
+                    ticket.Customer.Email,
+                    ticket.Customer.AvatarUrl
+                )
+            );
+
+            var conversationDto = new Domains.Conversation.GetConversationResponse(
+                ticket.ConversationId,
+                ticket.Conversation?.StartedAt ?? ticket.OpenedAt,
+                messages
+            );
+
+            return Result.Ok(new GetTicketWithConversationResponse(ticketDto, conversationDto));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching ticket with conversation {TicketId} for org {OrganizationId}", ticketId, organizationId);
+            return Result.Fail("Failed to retrieve ticket with conversation");
+        }
+    }
     public async Task<Result<GetTicketsResponse>> GetTickets(Guid organizationId, GetTicketsRequest request)
     {
         try
         {
             var query = _repository.Tickets
                 .Where(t => t.OrganizationId == organizationId)
+                .Include(t => t.Customer)
                 .OrderByDescending(t => t.OpenedAt);
 
             var totalCount = await query.CountAsync();
@@ -46,7 +127,13 @@ public class TicketService : ITicketService
                     t.Status,
                     t.OpenedAt,
                     t.ClosedAt,
-                    null // AssignedTo computed below
+                    null, // AssignedTo computed below
+                    new CustomerInfo(
+                        t.CustomerId,
+                        t.Customer.Username,
+                        t.Customer.Email,
+                        t.Customer.AvatarUrl
+                    )
                 ))
                 .ToListAsync();
 
@@ -115,65 +202,7 @@ public class TicketService : ITicketService
             if (!customerExists)
                 return Result.Fail("Customer not found");
 
-            // For now, assign to first AI agent in organization if exists
-            var aiAgentId = await _repository.Agents
-                .Where(a => a.OrganizationId == organizationId)
-                .OrderBy(a => a.CreatedAt)
-                .Select(a => a.Id)
-                .FirstOrDefaultAsync();
-
-            var ticket = new TicketModel
-            {
-                Id = Guid.CreateVersion7(),
-                Subject = request.Subject,
-                Context = request.Context,
-                Status = TicketStatus.Open,
-                OpenedAt = DateTime.UtcNow,
-                OrganizationId = organizationId,
-                CustomerId = request.CustomerId,
-                AssignedTo = aiAgentId,
-            };
-
-            _repository.Tickets.Add(ticket);
-            await _repository.SaveChangesAsync();
-
-            AssignedToInfo? assigned = null;
-            if (ticket.AssignedTo != Guid.Empty)
-            {
-                var agent = await _repository.Agents.Where(a => a.Id == ticket.AssignedTo)
-                    .Select(a => new { a.Id, a.Name }).FirstOrDefaultAsync();
-                if (agent != null)
-                    assigned = new AssignedToInfo(agent.Id, agent.Name, null, AssignedEntityType.AiAgent);
-            }
-
-            var response = new GetTicketResponse(
-                ticket.Id,
-                ticket.Subject,
-                ticket.Context,
-                ticket.Status,
-                ticket.OpenedAt,
-                ticket.ClosedAt,
-                assigned
-            );
-
-            return Result.Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating ticket for organization {OrganizationId}", organizationId);
-            return Result.Fail("Failed to create ticket");
-        }
-    }
-
-    public async Task<Result<GetTicketResponse>> EscalateTicket(Guid organizationId, Guid ticketId)
-    {
-        try
-        {
-            var ticket = await _repository.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId && t.OrganizationId == organizationId);
-            if (ticket == null)
-                return Result.Fail("Ticket not found");
-
-            // Assign to the first user in the organization
+            // Assign to the first human user in the organization and mark as escalated
             var user = await _repository.Users
                 .Where(u => u.OrganizationId == organizationId)
                 .OrderBy(u => u.CreatedAt)
@@ -182,9 +211,19 @@ public class TicketService : ITicketService
             if (user == null)
                 return Result.Fail("No users available to assign in organization");
 
-            ticket.Status = TicketStatus.Escalated;
-            ticket.AssignedTo = user.Id;
+            var ticket = new TicketModel
+            {
+                Id = Guid.CreateVersion7(),
+                Subject = request.Subject,
+                Context = request.Context,
+                Status = TicketStatus.Escalated,
+                OpenedAt = DateTime.UtcNow,
+                OrganizationId = organizationId,
+                CustomerId = request.CustomerId,
+                AssignedTo = user.Id,
+            };
 
+            _repository.Tickets.Add(ticket);
             await _repository.SaveChangesAsync();
 
             var assigned = new AssignedToInfo(user.Id, user.Username, user.AvatarUrl, AssignedEntityType.HumanAgent);
@@ -196,23 +235,35 @@ public class TicketService : ITicketService
                 ticket.Status,
                 ticket.OpenedAt,
                 ticket.ClosedAt,
-                assigned
+                assigned,
+                new CustomerInfo(
+                    request.CustomerId,
+                    (await _repository.Customers.Where(c => c.Id == request.CustomerId)
+                        .Select(c => new { c.Username, c.Email, c.AvatarUrl }).FirstAsync()).Username,
+                    (await _repository.Customers.Where(c => c.Id == request.CustomerId)
+                        .Select(c => new { c.Username, c.Email, c.AvatarUrl }).FirstAsync()).Email,
+                    (await _repository.Customers.Where(c => c.Id == request.CustomerId)
+                        .Select(c => new { c.Username, c.Email, c.AvatarUrl }).FirstAsync()).AvatarUrl
+                )
             );
 
             return Result.Ok(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error escalating ticket {TicketId} for org {OrganizationId}", ticketId, organizationId);
-            return Result.Fail("Failed to escalate ticket");
+            _logger.LogError(ex, "Error creating ticket for organization {OrganizationId}", organizationId);
+            return Result.Fail("Failed to create ticket");
         }
     }
+
 
     public async Task<Result<GetTicketResponse>> CloseTicket(Guid organizationId, Guid ticketId)
     {
         try
         {
-            var ticket = await _repository.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId && t.OrganizationId == organizationId);
+            var ticket = await _repository.Tickets
+                .Include(t => t.Customer)
+                .FirstOrDefaultAsync(t => t.Id == ticketId && t.OrganizationId == organizationId);
             if (ticket == null)
                 return Result.Fail("Ticket not found");
 
@@ -247,7 +298,8 @@ public class TicketService : ITicketService
                 ticket.Status,
                 ticket.OpenedAt,
                 ticket.ClosedAt,
-                assigned
+                assigned,
+                new CustomerInfo(ticket.CustomerId, ticket.Customer.Username, ticket.Customer.Email, ticket.Customer.AvatarUrl)
             );
 
             return Result.Ok(response);

@@ -24,6 +24,12 @@ export type Ticket = {
   openedAt: string; // ISO string
   closedAt?: string | null; // ISO string
   assignedTo?: AssignedToInfo | null;
+  customer: {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl?: string | null;
+  };
 };
 
 export type GetTicketsResponse = {
@@ -34,6 +40,28 @@ export type GetTicketsResponse = {
 export type GetTicketsRequest = {
   page?: number;
   pageSize?: number;
+};
+
+// Conversation types
+export type ConversationMessage = {
+  id: string;
+  timestamp: string; // ISO
+  senderType: "Customer" | "HumanAgent" | "AiAgent";
+  senderId?: string | null;
+  senderName: string;
+  senderAvatarUrl?: string | null;
+  content: string;
+};
+
+export type Conversation = {
+  id: string;
+  startedAt: string;
+  messages: ConversationMessage[];
+};
+
+export type GetTicketWithConversationResponse = {
+  ticket: Ticket;
+  conversation: Conversation;
 };
 
 
