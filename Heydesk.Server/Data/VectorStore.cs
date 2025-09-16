@@ -25,7 +25,7 @@ public class VectorStore : IVectorStore
             .AddAzureOpenAI(AppConfig.AzureAI.ApiKey, AppConfig.AzureAI.Endpoint)
             .AddAzureOpenAITextEmbedding("text-embedding-3-small", 1536)
             .AddAzureOpenAIChatCompletion("gpt-4.1")
-            .EnsureSchema(createVectorIndex: true)
+            .EnsureSchema(createVectorIndex: false)
             .Build();
     }
 
