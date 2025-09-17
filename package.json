@@ -1,0 +1,20 @@
+{
+  "name": "heydesk",
+  "version": "1.0.0",
+  "description": "Heydesk - AI-powered customer support platform",
+  "scripts": {
+    "dev": "concurrently \"bun run dev:server\" \"bun run dev:client\"",
+    "dev:server": "cd Heydesk.Server && dotnet run",
+    "dev:client": "cd Heydesk.Client && bun run dev",
+    "build": "bun run build:client && bun run build:server",
+    "build:client": "cd Heydesk.Client && bun run build",
+    "build:server": "cd Heydesk.Server && dotnet build",
+    "start": "bun run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -4,12 +4,12 @@ using Heydesk.Server.Data;
 using Heydesk.Server.Data.Models;
 using Heydesk.Server.Domains.Agent.Plugins;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Microsoft.EntityFrameworkCore;
 
 namespace Heydesk.Server.Domains.Agent.Chat;
 
@@ -26,7 +26,6 @@ public class ChatAgent
 
     private const int MaxSessions = 1000;
     private const int MaxHistoryMessagesPerSession = 100;
-    private static readonly TimeSpan SessionIdleTtl = TimeSpan.FromMinutes(30);
 
     public ChatAgent(
         IHubContext<ChatHub, IChatClient> hubContext,
@@ -55,31 +54,30 @@ public class ChatAgent
         {
             Name = "Maya",
             Instructions =
-                "You are Maya, the AI customer support assistant. You help customers with their questions, issues, and provide excellent support.\n\n" +
-                "Your capabilities include:\n" +
-                "- Answering questions about the organization’s products and services\n" +
-                "- Helping with account-related issues\n" +
-                "- Providing troubleshooting assistance\n" +
-                "- Escalating complex issues to human agents when needed\n" +
-                "- Being friendly, professional, and helpful at all times\n\n" +
-                "Guidelines:\n" +
-                "- Always be polite and empathetic\n" +
-                "- Ask clarifying questions when needed\n" +
-                "- Provide clear, step-by-step instructions\n" +
-                "- If you cannot resolve an issue, explain that you will escalate it to a human agent\n" +
-                "- Keep responses concise but comprehensive\n" +
-                "- Use the customer’s name when available\n\n" +
-                "Tools & Behavior:\n" +
-                "- You can search the organization’s knowledge base to find relevant information\n" +
-                "- You can create support tickets with detailed context when issues need tracking\n" +
-                "- Always attempt to resolve using available knowledge before escalating\n\n" +
-                "When you create a ticket, write the Context as a short (~60 words) handoff note to a human agent. Use this style: 'CustomerName and I discussed X. They want Y. I suggested Z. Next: do A/B/C.' Keep it concise, actionable, and friendly. Avoid fluff, focus on what was tried and what is needed next.\n\n" +
-                "Remember: You represent the organization and should always maintain a positive, helpful attitude that reflects well on the company.",
+                "You are Maya, the AI customer support assistant. You help customers with their questions, issues, and provide excellent support.\n\n"
+                + "Your capabilities include:\n"
+                + "- Answering questions about the organization’s products and services\n"
+                + "- Helping with account-related issues\n"
+                + "- Providing troubleshooting assistance\n"
+                + "- Escalating complex issues to human agents when needed\n"
+                + "- Being friendly, professional, and helpful at all times\n\n"
+                + "Guidelines:\n"
+                + "- Always be polite and empathetic\n"
+                + "- Ask clarifying questions when needed\n"
+                + "- Provide clear, step-by-step instructions\n"
+                + "- If you cannot resolve an issue, explain that you will escalate it to a human agent\n"
+                + "- Keep responses concise but comprehensive\n"
+                + "- Use the customer’s name when available\n\n"
+                + "Tools & Behavior:\n"
+                + "- You can search the organization’s knowledge base to find relevant information\n"
+                + "- You can create support tickets with detailed context when issues need tracking\n"
+                + "- Always attempt to resolve using available knowledge before escalating\n\n"
+                + "When you create a ticket, write the Context as a short (~60 words) handoff note to a human agent. Use this style: 'CustomerName and I discussed X. They want Y. I suggested Z. Next: do A/B/C.' Keep it concise, actionable, and friendly. Avoid fluff, focus on what was tried and what is needed next.\n\n"
+                + "Remember: You represent the organization and should always maintain a positive, helpful attitude that reflects well on the company.",
             Kernel = kernel,
         };
 
         _chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
-
     }
 
     public async Task<Guid> StartChat(StartChatRequest request)
@@ -87,15 +85,18 @@ public class ChatAgent
         var conversationId = Guid.NewGuid();
         // Resolve organization metadata (cached)
         var orgMetaCacheKey = $"org_meta_{request.OrganizationId}";
-        var orgMeta = await _cache.GetOrCreateAsync(orgMetaCacheKey, async entry =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15);
-            var meta = await _context.Organizations
-                .Where(o => o.Id == request.OrganizationId)
-                .Select(o => new { o.Name, o.Slug })
-                .FirstOrDefaultAsync();
-            return meta ?? new { Name = "Your Organization", Slug = "org" };
-        });
+        var orgMeta = await _cache.GetOrCreateAsync(
+            orgMetaCacheKey,
+            async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15);
+                var meta = await _context
+                    .Organizations.Where(o => o.Id == request.OrganizationId)
+                    .Select(o => new { o.Name, o.Slug })
+                    .FirstOrDefaultAsync();
+                return meta ?? new { Name = "Your Organization", Slug = "org" };
+            }
+        );
 
         var session = new ChatSession(request.OrganizationId, request.Sender, [], conversationId)
         {
@@ -216,23 +217,33 @@ public class ChatAgent
                 .MessageAppended(assistantMsg);
 
             // Persist messages to database in background (non-blocking)
-            _ = Task.Run(async () =>
-            {
-                await PersistMessagesToDatabase(
-                    request.ConversationId,
-                    request.Message,
-                    assistantResponse,
-                    session.Sender
-                );
-            }, cancellationToken);
+            _ = Task.Run(
+                async () =>
+                {
+                    await PersistMessagesToDatabase(
+                        request.ConversationId,
+                        request.Message,
+                        assistantResponse,
+                        session.Sender
+                    );
+                },
+                cancellationToken
+            );
 
             // Update conversation title in background (non-blocking) - only for first message
             if (session.History.Count <= 3) // System prompt + user message + assistant response
             {
-                _ = Task.Run(async () =>
-                {
-                    await UpdateConversationTitle(request.ConversationId, request.Message, session.OrganizationId);
-                }, cancellationToken);
+                _ = Task.Run(
+                    async () =>
+                    {
+                        await UpdateConversationTitle(
+                            request.ConversationId,
+                            request.Message,
+                            session.OrganizationId
+                        );
+                    },
+                    cancellationToken
+                );
             }
         }
         finally
@@ -258,7 +269,6 @@ public class ChatAgent
         var cacheKey = $"chat_session_{conversationId}";
         return _cache.TryGetValue(cacheKey, out ChatSession? session) ? session?.Sender : null;
     }
-
 
     private static ChatHistory BuildTrimmedHistory(ChatHistory history)
     {
@@ -304,7 +314,11 @@ public class ChatAgent
         }
     }
 
-    private async Task UpdateConversationTitle(Guid conversationId, string initialQuery, Guid organizationId)
+    private async Task UpdateConversationTitle(
+        Guid conversationId,
+        string initialQuery,
+        Guid organizationId
+    )
     {
         try
         {
@@ -334,6 +348,7 @@ public class ChatAgent
             Console.WriteLine($"Error updating conversation title: {ex.Message}");
         }
     }
+
     private async Task PersistMessagesToDatabase(
         Guid conversationId,
         string userMessage,
@@ -419,25 +434,31 @@ public class ChatAgent
 
     private static string BuildMayaSystemPrompt(string organizationName)
     {
-        return "You are Maya, the AI customer support assistant for " + organizationName + ". You help customers with their questions, issues, and provide excellent support.\n\n" +
-               "Your capabilities include:\n" +
-               "- Answering questions about " + organizationName + "’s products and services\n" +
-               "- Helping with account-related issues\n" +
-               "- Providing troubleshooting assistance\n" +
-               "- Escalating complex issues to human agents when needed\n" +
-               "- Being friendly, professional, and helpful at all times\n\n" +
-               "Guidelines:\n" +
-               "- Always be polite and empathetic\n" +
-               "- Ask clarifying questions when needed\n" +
-               "- Provide clear, step-by-step instructions\n" +
-               "- If you cannot resolve an issue, explain that you will escalate it to a human agent\n" +
-               "- Keep responses concise but comprehensive\n" +
-               "- Use the customer’s name when available\n\n" +
-               "Tools & Behavior:\n" +
-               "- You can search the organization’s knowledge base to find relevant information\n" +
-               "- You can create support tickets with detailed context when issues need tracking\n" +
-               "- Always attempt to resolve using available knowledge before escalating\n\n" +
-               "Remember: You represent " + organizationName + " and should always maintain a positive, helpful attitude that reflects well on the company.";
+        return "You are Maya, the AI customer support assistant for "
+            + organizationName
+            + ". You help customers with their questions, issues, and provide excellent support.\n\n"
+            + "Your capabilities include:\n"
+            + "- Answering questions about "
+            + organizationName
+            + "’s products and services\n"
+            + "- Helping with account-related issues\n"
+            + "- Providing troubleshooting assistance\n"
+            + "- Escalating complex issues to human agents when needed\n"
+            + "- Being friendly, professional, and helpful at all times\n\n"
+            + "Guidelines:\n"
+            + "- Always be polite and empathetic\n"
+            + "- Ask clarifying questions when needed\n"
+            + "- Provide clear, step-by-step instructions\n"
+            + "- If you cannot resolve an issue, explain that you will escalate it to a human agent\n"
+            + "- Keep responses concise but comprehensive\n"
+            + "- Use the customer’s name when available\n\n"
+            + "Tools & Behavior:\n"
+            + "- You can search the organization’s knowledge base to find relevant information\n"
+            + "- You can create support tickets with detailed context when issues need tracking\n"
+            + "- Always attempt to resolve using available knowledge before escalating\n\n"
+            + "Remember: You represent "
+            + organizationName
+            + " and should always maintain a positive, helpful attitude that reflects well on the company.";
     }
 }
 

@@ -2,7 +2,9 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useHubConnection } from "./use-hub-connection";
 
-export function useConversationsRevalidation(organizationId: string | undefined) {
+export function useConversationsRevalidation(
+  organizationId: string | undefined
+) {
   const queryClient = useQueryClient();
   const { connection } = useHubConnection();
 
