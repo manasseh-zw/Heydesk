@@ -158,6 +158,19 @@ VITE_API_BASE_URL=http://localhost:5176
 
 ### Install & Run
 
+#### Option 1: Run both services simultaneously (Recommended)
+
+```bash
+# Install dependencies
+bun install
+
+# Run both server and client
+bun run dev
+# or
+```
+
+#### Option 2: Run services separately
+
 ```bash
 # Server
 cd Heydesk.Server
@@ -166,11 +179,18 @@ dotnet build
 dotnet ef database update
 dotnet run
 
-# Client
-cd ../Heydesk.Client
+# Client (in a new terminal)
+cd Heydesk.Client
 bun install
 bun run dev
 ```
+
+#### Available Scripts
+
+- `bun run dev` - Start both server and client simultaneously
+- `bun run dev:server` - Start only the .NET server
+- `bun run dev:client` - Start only the React client
+- `bun run build` - Build both server and client
 
 ## ☁️ Deployment
 
