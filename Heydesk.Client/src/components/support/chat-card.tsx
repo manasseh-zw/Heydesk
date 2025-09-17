@@ -11,6 +11,12 @@ type Props = {
 };
 
 export function ChatCard({ conversation, isActive, onSelect }: Props) {
+  // Debug logging
+  console.log("ChatCard rendering conversation:", {
+    id: conversation.id,
+    title: conversation.title,
+  });
+
   // Format the last message time
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);

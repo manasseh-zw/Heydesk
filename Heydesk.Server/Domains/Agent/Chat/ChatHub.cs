@@ -69,14 +69,18 @@ public class ChatHub : Hub<IChatClient>
         );
     }
 
-    public async Task JoinOrganizationGroup(Guid organizationId)
+    public async Task JoinOrganizationGroup(string organizationId)
     {
+        Console.WriteLine($"Client {Context.ConnectionId} joining organization group: {organizationId}");
         await Groups.AddToGroupAsync(Context.ConnectionId, $"org-{organizationId}");
+        Console.WriteLine($"Client {Context.ConnectionId} successfully joined organization group: {organizationId}");
     }
 
-    public async Task LeaveOrganizationGroup(Guid organizationId)
+    public async Task LeaveOrganizationGroup(string organizationId)
     {
+        Console.WriteLine($"Client {Context.ConnectionId} leaving organization group: {organizationId}");
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"org-{organizationId}");
+        Console.WriteLine($"Client {Context.ConnectionId} successfully left organization group: {organizationId}");
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)

@@ -230,9 +230,10 @@ public class ChatAgent
                 cancellationToken
             );
 
-            // Update conversation title in background (non-blocking) - only for first message
-            if (session.History.Count <= 3) // System prompt + user message + assistant response
+            // Update conversation title in background (non-blocking) - only for first user message
+            if (!session.TitleUpdated && session.History.Count >= 3) // System prompt + user message + assistant response
             {
+                session.TitleUpdated = true; // Mark as updated to prevent multiple updates
                 _ = Task.Run(
                     async () =>
                     {
@@ -327,25 +328,38 @@ public class ChatAgent
 
             var conversation = await context.Conversations.FindAsync(conversationId);
             if (conversation == null)
-                throw new Exception("Conversation not found");
+            {
+                Console.WriteLine($"Conversation {conversationId} not found for title update");
+                return;
+            }
 
             // Only update title if it's still the default "new_conversation"
             if (conversation.Title != "new_conversation")
+            {
+                Console.WriteLine($"Conversation {conversationId} already has title: {conversation.Title}");
                 return;
+            }
+
+            Console.WriteLine($"Updating title for conversation {conversationId} with query: {initialQuery}");
 
             var title = await _chatCompletionService.GetChatMessageContentAsync(
                 $"Generate a short, descriptive title (max 50 characters) for this user initial query: \"{initialQuery}\"."
             );
 
-            conversation.Title = title.Content?.Trim() ?? "Support Conversation";
+            var newTitle = title.Content?.Trim() ?? "Support Conversation";
+            conversation.Title = newTitle;
             await context.SaveChangesAsync();
+
+            Console.WriteLine($"Updated conversation {conversationId} title to: {newTitle}");
 
             // Notify all clients in the organization group that conversations have been updated
             await _hubContext.Clients.Group($"org-{organizationId}").ConversationsUpdated();
+            Console.WriteLine($"Sent ConversationsUpdated signal to org-{organizationId}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error updating conversation title: {ex.Message}");
+            Console.WriteLine($"Error updating conversation title for {conversationId}: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
         }
     }
 
@@ -410,6 +424,7 @@ public class ChatAgent
         public SemaphoreSlim Gate { get; }
         public string OrganizationName { get; set; } = string.Empty;
         public string OrganizationSlug { get; set; } = string.Empty;
+        public bool TitleUpdated { get; set; } = false;
 
         public ChatSession(
             Guid organizationId,

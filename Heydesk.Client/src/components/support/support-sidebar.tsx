@@ -62,6 +62,14 @@ export default function SupportSidebar({
   // Use conversations directly from the API
   const conversations = conversationsData?.conversations || [];
 
+  // Debug logging
+  console.log("SupportSidebar - Active org ID:", activeOrganization?.id);
+  console.log("SupportSidebar - Conversations count:", conversations.length);
+  console.log(
+    "SupportSidebar - Conversations:",
+    conversations.map((c) => ({ id: c.id, title: c.title }))
+  );
+
   const handleNewChat = () => {
     if (activeOrgSlug) {
       navigate({
