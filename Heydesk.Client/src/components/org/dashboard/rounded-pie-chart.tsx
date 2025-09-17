@@ -8,56 +8,67 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
+import type { TicketTrend } from "@/lib/services/analytics.service";
 
-export const description = "A pie chart with a label list";
-
-const chartData = [
-  { browser: "Open", visitors: 42, fill: "#84CC16" },
-  { browser: "Escalated", visitors: 7, fill: "var(--color-safari)" },
-  { browser: "Closed", visitors: 70, fill: "#FCA070" },
-  { browser: "Unassigned", visitors: 9, fill: "#2196f3" },
-  { browser: "Other", visitors: 12, fill: "#fca311" },
-];
+interface RoundedPieChartProps {
+  data?: TicketTrend[];
+}
 
 const chartConfig = {
   visitors: {
     label: "Count",
   },
-  chrome: {
-    label: "Open",
+  created: {
+    label: "Created",
     color: "var(--chart-1)",
   },
-  safari: {
-    label: "Escalated",
+  resolved: {
+    label: "Resolved",
     color: "var(--chart-2)",
   },
-  firefox: {
-    label: "Closed",
+  escalated: {
+    label: "Escalated",
     color: "var(--chart-3)",
-  },
-  edge: {
-    label: "Unassigned",
-    color: "var(--chart-4)",
-  },
-  other: {
-    label: "Other",
-    color: "var(--chart-5)",
   },
 } satisfies ChartConfig;
 
-export function RoundedPieChart() {
+export function RoundedPieChart({ data }: RoundedPieChartProps) {
+  // Transform data for the chart
+  const totalCreated =
+    data?.reduce((sum, trend) => sum + trend.createdCount, 0) || 0;
+  const totalResolved =
+    data?.reduce((sum, trend) => sum + trend.resolvedCount, 0) || 0;
+  const totalEscalated =
+    data?.reduce((sum, trend) => sum + trend.escalatedCount, 0) || 0;
+
+  const chartData = [
+    { browser: "Created", visitors: totalCreated, fill: "#84CC16" },
+    { browser: "Resolved", visitors: totalResolved, fill: "#22c55e" },
+    { browser: "Escalated", visitors: totalEscalated, fill: "#ef4444" },
+  ].filter((item) => item.visitors > 0); // Only show non-zero values
+
+  const resolutionRate =
+    totalCreated > 0 ? (totalResolved / totalCreated) * 100 : 0;
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
         <CardTitle>
-          Ticket distribution
+          Ticket Status
           <Badge
             variant="outline"
-            className="text-green-500 bg-green-500/10 border-none ml-2"
+            className={`${
+              resolutionRate > 70
+                ? "text-green-500 bg-green-500/10 border-none"
+                : "text-red-500 bg-red-500/10 border-none"
+            } ml-2`}
           >
-            <TrendingUp className="h-4 w-4" />
-            <span>5.2%</span>
+            {resolutionRate > 70 ? (
+              <TrendingUp className="h-4 w-4" />
+            ) : (
+              <TrendingDown className="h-4 w-4" />
+            )}
+            <span>{Math.round(resolutionRate)}%</span>
           </Badge>
         </CardTitle>
       </CardHeader>
