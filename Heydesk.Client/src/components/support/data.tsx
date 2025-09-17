@@ -218,7 +218,7 @@ export const chats = [
     preview: "Agent: Could you share the error screenshot?",
     updatedAt: "2025-09-10T08:22:00Z",
     unread: true,
-    participants: ["You", "Heydesk Assistant"],
+    participants: ["Agent", "Customer"],
   },
   {
     id: "cht-2002",
@@ -226,7 +226,7 @@ export const chats = [
     preview: "You: What’s the best way to import historical tickets?",
     updatedAt: "2025-09-07T13:10:00Z",
     unread: false,
-    participants: ["You", "Support"],
+    participants: ["Agent", "Customer"],
   },
 ];
 

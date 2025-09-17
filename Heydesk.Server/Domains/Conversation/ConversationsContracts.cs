@@ -18,4 +18,32 @@ public record GetConversationResponse(
     List<MessageResponse> Messages
 );
 
+public record GetConversationsRequest(int Page = 1, int PageSize = 20);
+
+public record ConversationSummary(
+    Guid Id,
+    string Title,
+    DateTime StartedAt,
+    DateTime? LastMessageAt,
+    List<MessageResponse> PreviewMessages, // First 2 messages for display
+    bool IsTicketTied,
+    Guid? TicketId
+);
+
+public record GetConversationsResponse(
+    List<ConversationSummary> Conversations,
+    int TotalCount,
+    int Page,
+    int PageSize
+);
+
+public record GetConversationWithMessagesResponse(
+    Guid Id,
+    string Title,
+    DateTime StartedAt,
+    List<MessageResponse> Messages,
+    bool IsTicketTied,
+    Guid? TicketId
+);
+
 

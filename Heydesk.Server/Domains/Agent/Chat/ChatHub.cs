@@ -69,6 +69,16 @@ public class ChatHub : Hub<IChatClient>
         );
     }
 
+    public async Task JoinOrganizationGroup(Guid organizationId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"org-{organizationId}");
+    }
+
+    public async Task LeaveOrganizationGroup(Guid organizationId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"org-{organizationId}");
+    }
+
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         await base.OnDisconnectedAsync(exception);
@@ -82,6 +92,7 @@ public interface IChatClient
     Task Token(string token);
     Task MessageAppended(ChatMessageDto message);
     Task ConversationStateChanged(ConversationStateDto state);
+    Task ConversationsUpdated();
 }
 
 public sealed record ChatMessageDto(

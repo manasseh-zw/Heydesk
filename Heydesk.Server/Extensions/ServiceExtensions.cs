@@ -5,6 +5,7 @@ using Heydesk.Server.Data.Models;
 using Heydesk.Server.Domains.Agent;
 using Heydesk.Server.Domains.Agent.Chat;
 using Heydesk.Server.Domains.Auth;
+using Heydesk.Server.Domains.Conversation;
 using Heydesk.Server.Domains.Document;
 using Heydesk.Server.Domains.Document.Processors;
 using Heydesk.Server.Domains.Document.Workflows;
@@ -183,6 +184,9 @@ public static class ServiceExtensions
 
         // Ticket services
         services.AddScoped<ITicketService, TicketService>();
+
+        // Conversation services
+        services.AddScoped<IConversationsService, ConversationsService>();
 
         // Email / Resend using AppConfig
         services.AddHttpClient<Resend.ResendClient>();

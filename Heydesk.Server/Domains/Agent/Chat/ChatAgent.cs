@@ -21,7 +21,8 @@ public class ChatAgent
     private readonly RepositoryContext _context;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IVectorStore _vectorStore;
-    private readonly Timer _pruneTimer;
+
+    private readonly IChatCompletionService _chatCompletionService;
 
     private const int MaxSessions = 1000;
     private const int MaxHistoryMessagesPerSession = 100;
@@ -77,12 +78,8 @@ public class ChatAgent
             Kernel = kernel,
         };
 
-        _pruneTimer = new Timer(
-            _ => PruneExpiredSessions(),
-            null,
-            TimeSpan.FromMinutes(5),
-            TimeSpan.FromMinutes(5)
-        );
+        _chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
+
     }
 
     public async Task<Guid> StartChat(StartChatRequest request)
@@ -102,8 +99,8 @@ public class ChatAgent
 
         var session = new ChatSession(request.OrganizationId, request.Sender, [], conversationId)
         {
-            OrganizationName = orgMeta.Name,
-            OrganizationSlug = orgMeta.Slug,
+            OrganizationName = orgMeta?.Name ?? "Your Organization",
+            OrganizationSlug = orgMeta?.Slug ?? "org",
         };
 
         // Seed system prompt customized per organization
@@ -227,14 +224,21 @@ public class ChatAgent
                     assistantResponse,
                     session.Sender
                 );
-            });
+            }, cancellationToken);
+
+            // Update conversation title in background (non-blocking) - only for first message
+            if (session.History.Count <= 3) // System prompt + user message + assistant response
+            {
+                _ = Task.Run(async () =>
+                {
+                    await UpdateConversationTitle(request.ConversationId, request.Message, session.OrganizationId);
+                }, cancellationToken);
+            }
         }
         finally
         {
             session.Gate.Release();
         }
-
-        EvictIfOverCapacity();
     }
 
     public Task<bool> EndChat(Guid conversationId)
@@ -255,17 +259,6 @@ public class ChatAgent
         return _cache.TryGetValue(cacheKey, out ChatSession? session) ? session?.Sender : null;
     }
 
-    private void PruneExpiredSessions()
-    {
-        // Memory cache handles expiration automatically based on the TTL we set
-        // No need for manual pruning since we set 1-hour expiration on sessions
-    }
-
-    private void EvictIfOverCapacity()
-    {
-        // Memory cache handles capacity management automatically
-        // No need for manual eviction
-    }
 
     private static ChatHistory BuildTrimmedHistory(ChatHistory history)
     {
@@ -298,6 +291,7 @@ public class ChatAgent
                 CustomerId = Guid.Parse(sender.SenderId),
                 OrganizationId = organizationId,
                 StartedAt = DateTime.UtcNow,
+                Title = "new_conversation", // Default title to indicate it needs updating
             };
 
             context.Conversations.Add(conversation);
@@ -310,6 +304,36 @@ public class ChatAgent
         }
     }
 
+    private async Task UpdateConversationTitle(Guid conversationId, string initialQuery, Guid organizationId)
+    {
+        try
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<RepositoryContext>();
+
+            var conversation = await context.Conversations.FindAsync(conversationId);
+            if (conversation == null)
+                throw new Exception("Conversation not found");
+
+            // Only update title if it's still the default "new_conversation"
+            if (conversation.Title != "new_conversation")
+                return;
+
+            var title = await _chatCompletionService.GetChatMessageContentAsync(
+                $"Generate a short, descriptive title (max 50 characters) for this user initial query: \"{initialQuery}\"."
+            );
+
+            conversation.Title = title.Content?.Trim() ?? "Support Conversation";
+            await context.SaveChangesAsync();
+
+            // Notify all clients in the organization group that conversations have been updated
+            await _hubContext.Clients.Group($"org-{organizationId}").ConversationsUpdated();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating conversation title: {ex.Message}");
+        }
+    }
     private async Task PersistMessagesToDatabase(
         Guid conversationId,
         string userMessage,
@@ -359,12 +383,6 @@ public class ChatAgent
             // In a production environment, you'd want to use a proper logging framework
             Console.WriteLine($"Error persisting messages to database: {ex.Message}");
         }
-    }
-
-    public void Dispose()
-    {
-        _pruneTimer?.Dispose();
-        // Memory cache cleanup is handled automatically
     }
 
     private sealed class ChatSession : IDisposable
