@@ -16,6 +16,7 @@ import {
   CircleXIcon,
   Columns3Icon,
   EllipsisIcon,
+  EyeIcon,
   FileTextIcon,
   GlobeIcon,
   ListFilterIcon,
@@ -55,6 +56,7 @@ import { useStore } from "@tanstack/react-store";
 import { authState } from "@/lib/state/auth.state";
 import { getDocuments } from "@/lib/services/documents.service";
 import { type Row } from "@tanstack/react-table";
+import { DocContentModal } from "./doc-content-modal";
 
 type DocumentRow = Document;
 
@@ -185,7 +187,12 @@ const columns: ColumnDef<DocumentRow>[] = [
   {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }) => <DocumentRowActions row={row} />,
+    cell: ({ row, table }) => (
+      <DocumentRowActions
+        row={row}
+        onViewContent={(table as any).options.meta?.handleViewContent}
+      />
+    ),
     size: 60,
     enableHiding: false,
   },
@@ -202,6 +209,10 @@ export default function DocumentsTable() {
     pageSize: 10,
   });
   const [data, setData] = useState<DocumentRow[]>([]);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(
+    null
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { organization } = useStore(authState);
@@ -225,6 +236,11 @@ export default function DocumentsTable() {
     }
   }, [query.data]);
 
+  const handleViewContent = (document: Document) => {
+    setSelectedDocument(document);
+    setIsModalOpen(true);
+  };
+
   const table = useReactTable({
     data,
     columns,
@@ -237,6 +253,9 @@ export default function DocumentsTable() {
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     state: { sorting, pagination, columnFilters },
+    meta: {
+      handleViewContent,
+    },
   });
 
   return (
@@ -384,13 +403,31 @@ export default function DocumentsTable() {
           </TableBody>
         </Table>
       </div>
+
+      <DocContentModal
+        document={selectedDocument}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+      />
     </div>
   );
 }
 
-function DocumentRowActions({ row }: { row: Row<DocumentRow> }) {
+function DocumentRowActions({
+  row,
+  onViewContent,
+}: {
+  row: Row<DocumentRow>;
+  onViewContent?: (document: Document) => void;
+}) {
   const handleDelete = () => {
     console.log("Delete document:", row.original.id);
+  };
+
+  const handleViewContent = () => {
+    if (onViewContent) {
+      onViewContent(row.original);
+    }
   };
 
   return (
@@ -409,6 +446,10 @@ function DocumentRowActions({ row }: { row: Row<DocumentRow> }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuGroup>
+          <DropdownMenuItem onClick={handleViewContent}>
+            <EyeIcon size={16} className="mr-2" />
+            View Content
+          </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"
             onClick={handleDelete}
