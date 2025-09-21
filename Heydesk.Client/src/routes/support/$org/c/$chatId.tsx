@@ -23,7 +23,20 @@ export const Route = createFileRoute("/support/$org/c/$chatId")({
       // Set the current organization from the URL
       customerAuthActions.setCurrentOrganization(orgSlug);
 
-      return { chatId, orgSlug };
+      // Find the current organization to get its ID
+      const currentOrganization = customer.organizations.find(
+        (org) => org.slug === orgSlug
+      );
+
+      if (!currentOrganization) {
+        throw redirect({ to: "/onboarding/select-organization" });
+      }
+
+      return {
+        chatId,
+        orgSlug,
+        organizationId: currentOrganization.id,
+      };
     } catch (err) {
       if (isRedirect(err)) throw err;
       customerAuthActions.clearCustomer();
@@ -34,12 +47,16 @@ export const Route = createFileRoute("/support/$org/c/$chatId")({
 });
 
 function RouteComponent() {
-  const { chatId, orgSlug } = Route.useLoaderData();
+  const { chatId, orgSlug, organizationId } = Route.useLoaderData();
 
   return (
     <main className="h-screen-minus-sidebar flex flex-col overflow-hidden">
       <div className="flex-1 flex flex-col mx-auto w-full px-4">
-        <ChatPage chatId={chatId} orgSlug={orgSlug} />
+        <ChatPage
+          chatId={chatId}
+          orgSlug={orgSlug}
+          organizationId={organizationId}
+        />
       </div>
     </main>
   );

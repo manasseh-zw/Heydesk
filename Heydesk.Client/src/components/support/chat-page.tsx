@@ -21,14 +21,74 @@ import {
 import { Send } from "lucide-react";
 import Avatar from "boring-avatars";
 import { ShiningText } from "@/components/shining-text";
+import {
+  type GetConversationWithMessagesResponse,
+  type MessageResponse,
+  type SenderType,
+} from "@/lib/services/conversations.service";
+import { useConversationWithMessages } from "@/lib/hooks/use-conversations";
 
 interface ChatPageProps {
   chatId: string;
   orgSlug: string;
+  organizationId: string;
 }
 
-export function ChatPage({ chatId }: ChatPageProps) {
+// Helper function to convert MessageResponse to ChatMessage
+const convertMessageResponseToChatMessage = (
+  msg: MessageResponse
+): ChatMessage => {
+  const senderTypeMap: Record<
+    SenderType,
+    "customer" | "ai-agent" | "human-agent"
+  > = {
+    Customer: "customer",
+    AiAgent: "ai-agent",
+    HumanAgent: "human-agent",
+  };
+
+  const roleMap: Record<SenderType, "user" | "assistant" | "human-agent"> = {
+    Customer: "user",
+    AiAgent: "assistant",
+    HumanAgent: "human-agent",
+  };
+
+  return {
+    id: msg.id,
+    role: roleMap[msg.senderType],
+    content: msg.content,
+    sender: {
+      id:
+        msg.senderId ||
+        (msg.senderType === "AiAgent" ? "ai-agent" : msg.senderId || "unknown"),
+      name: msg.senderName,
+      avatarUrl: msg.senderAvatarUrl || undefined,
+      type: senderTypeMap[msg.senderType],
+    },
+    createdAt: msg.timestamp,
+  };
+};
+
+export function ChatPage({ chatId, organizationId }: ChatPageProps) {
+  // Use React Query to fetch conversation history reactively
+  const { data: conversationHistory, isLoading: isLoadingHistory } =
+    useConversationWithMessages(organizationId, chatId);
+
+  // Initialize and update messages when conversation history changes
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  // Update messages when conversation history is loaded or chatId changes
+  useEffect(() => {
+    if (conversationHistory?.messages) {
+      const historyMessages = conversationHistory.messages.map(
+        convertMessageResponseToChatMessage
+      );
+      setMessages(historyMessages);
+    } else {
+      // Clear messages for new conversations
+      setMessages([]);
+    }
+  }, [conversationHistory, chatId]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -93,9 +153,10 @@ export function ChatPage({ chatId }: ChatPageProps) {
         await chatService.connect();
         await chatService.joinConversation(chatId);
 
-        // Check for pending initial message and send it
+        // Check for pending initial message and send it (only for new conversations)
         const pendingMessage = chatActions.consumePendingInitialMessage();
-        if (pendingMessage && pendingMessage.trim()) {
+        if (pendingMessage && pendingMessage.trim() && !conversationHistory) {
+          // This is a new conversation with an initial message
           setIsThinking(true);
           await chatService.sendMessage(chatId, pendingMessage.trim());
         }
@@ -105,13 +166,18 @@ export function ChatPage({ chatId }: ChatPageProps) {
       }
     };
 
-    connectAndJoin();
+    // Only connect if not loading history
+    if (!isLoadingHistory) {
+      connectAndJoin();
+    }
 
     return () => {
-      chatService.leaveConversation(chatId);
-      chatService.disconnect();
+      if (!isLoadingHistory) {
+        chatService.leaveConversation(chatId);
+        chatService.disconnect();
+      }
     };
-  }, [chatService, chatId]);
+  }, [chatService, chatId, conversationHistory, isLoadingHistory]);
 
   const handleSend = async () => {
     if (!input.trim() || !isConnected) return;
@@ -138,6 +204,17 @@ export function ChatPage({ chatId }: ChatPageProps) {
       handleSend();
     }
   };
+
+  // Show loading state while fetching conversation history
+  if (isLoadingHistory) {
+    return (
+      <div className="relative h-full max-w-3xl mx-auto w-full flex items-center justify-center">
+        <div className="text-sm text-muted-foreground">
+          Loading conversation...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-full max-w-3xl mx-auto w-full">

@@ -16,16 +16,23 @@ import { customerAuthState } from "@/lib/state/customer.state";
 import { Search, Plus } from "lucide-react";
 import { Button } from "../ui/button";
 import { ChatList } from "./chat-list";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useConversations } from "@/lib/hooks/use-conversations";
 import { useConversationsRevalidation } from "@/lib/hooks/use-conversations-revalidation";
 import { useParams } from "@tanstack/react-router";
+import type { ConversationSummary } from "@/lib/services/conversations.service";
 
 export default function SupportSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate();
+  const location = useLocation();
   const params = useParams({ from: "/support/$org" });
+
+  // Extract chatId from current pathname if we're on a chat page
+  const currentChatId = location.pathname.match(
+    /\/support\/[^\/]+\/c\/([^\/]+)/
+  )?.[1];
   const [customer, currentOrganizationSlug] = useStore(
     customerAuthState,
     (state) => [state.customer, state.currentOrganization]
@@ -79,6 +86,18 @@ export default function SupportSidebar({
     }
   };
 
+  const handleSelectConversation = (conversation: ConversationSummary) => {
+    if (activeOrgSlug) {
+      navigate({
+        to: "/support/$org/c/$chatId" as any,
+        params: {
+          org: activeOrgSlug,
+          chatId: conversation.id,
+        } as any,
+      });
+    }
+  };
+
   return (
     <Sidebar
       collapsible="offcanvas"
@@ -127,7 +146,11 @@ export default function SupportSidebar({
             </div>
           </div>
         ) : (
-          <ChatList items={conversations} />
+          <ChatList
+            items={conversations}
+            activeId={currentChatId}
+            onSelect={handleSelectConversation}
+          />
         )}
       </SidebarContent>
       <SidebarFooter>

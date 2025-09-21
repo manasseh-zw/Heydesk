@@ -33,8 +33,8 @@ public class ChatHub : Hub<IChatClient>
 
     public async Task SendUserMessage(ContinueChatRequest request)
     {
-        // Get sender info from the session
-        var senderInfo = _agent.GetSenderInfo(request.ConversationId);
+        // Get sender info from the session (now async and can load from database)
+        var senderInfo = await _agent.GetSenderInfo(request.ConversationId);
         if (senderInfo == null)
         {
             throw new InvalidOperationException("Conversation not found");

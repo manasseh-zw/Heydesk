@@ -131,7 +131,15 @@ public class ChatAgent
     {
         var cacheKey = $"chat_session_{request.ConversationId}";
         if (!_cache.TryGetValue(cacheKey, out ChatSession? session) || session == null)
-            throw new Exception("session does not exist");
+        {
+            // Session doesn't exist in memory, try to load from database
+            session = await LoadExistingConversationSession(request.ConversationId);
+            if (session == null)
+                throw new Exception("conversation does not exist");
+
+            // Cache the loaded session
+            _cache.Set(cacheKey, session, TimeSpan.FromHours(1));
+        }
 
         await session!.Gate.WaitAsync(cancellationToken);
         try
@@ -265,10 +273,24 @@ public class ChatAgent
         return Task.FromResult(false);
     }
 
-    public SenderInfo? GetSenderInfo(Guid conversationId)
+    public async Task<SenderInfo?> GetSenderInfo(Guid conversationId)
     {
         var cacheKey = $"chat_session_{conversationId}";
-        return _cache.TryGetValue(cacheKey, out ChatSession? session) ? session?.Sender : null;
+        if (_cache.TryGetValue(cacheKey, out ChatSession? session) && session != null)
+        {
+            return session.Sender;
+        }
+
+        // If not in cache, try to load from database to get sender info
+        var loadedSession = await LoadExistingConversationSession(conversationId);
+        if (loadedSession != null)
+        {
+            // Cache the loaded session
+            _cache.Set(cacheKey, loadedSession, TimeSpan.FromHours(1));
+            return loadedSession.Sender;
+        }
+
+        return null;
     }
 
     private static ChatHistory BuildTrimmedHistory(ChatHistory history)
@@ -411,6 +433,79 @@ public class ChatAgent
             // Log the error but don't throw to avoid affecting the user experience
             // In a production environment, you'd want to use a proper logging framework
             Console.WriteLine($"Error persisting messages to database: {ex.Message}");
+        }
+    }
+
+    private async Task<ChatSession?> LoadExistingConversationSession(Guid conversationId)
+    {
+        try
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<RepositoryContext>();
+
+            // Load conversation with messages and organization info
+            var conversation = await context.Conversations
+                .Include(c => c.Messages.OrderBy(m => m.Timestamp))
+                .Include(c => c.Organization)
+                .Include(c => c.Customer)
+                .FirstOrDefaultAsync(c => c.Id == conversationId);
+
+            if (conversation == null)
+                return null;
+
+            // Get the first customer message to derive sender info
+            var firstCustomerMessage = conversation.Messages
+                .FirstOrDefault(m => m.SenderType == SenderType.Customer);
+
+            if (firstCustomerMessage == null)
+                return null;
+
+            var senderInfo = new SenderInfo(
+                firstCustomerMessage.SenderId?.ToString() ?? conversation.CustomerId.ToString(),
+                firstCustomerMessage.SenderName,
+                firstCustomerMessage.SenderAvatarUrl ?? string.Empty
+            );
+
+            // Rebuild chat history from database messages
+            var chatHistory = new ChatHistory();
+
+            // Add system prompt
+            var mayaPrompt = BuildMayaSystemPrompt(conversation.Organization.Name);
+            chatHistory.Add(new ChatMessageContent(AuthorRole.System, mayaPrompt));
+
+            // Add conversation messages
+            foreach (var message in conversation.Messages)
+            {
+                var role = message.SenderType switch
+                {
+                    SenderType.Customer => AuthorRole.User,
+                    SenderType.AiAgent => AuthorRole.Assistant,
+                    SenderType.HumanAgent => AuthorRole.Assistant, // Treat human agents as assistants in chat history
+                    _ => AuthorRole.User
+                };
+
+                chatHistory.Add(new ChatMessageContent(role, message.Content));
+            }
+
+            // Create session with loaded data
+            var session = new ChatSession(
+                conversation.OrganizationId,
+                senderInfo,
+                chatHistory,
+                conversationId
+            )
+            {
+                OrganizationName = conversation.Organization.Name,
+                OrganizationSlug = conversation.Organization.Slug,
+                TitleUpdated = conversation.Title != "new_conversation" // Mark as updated if title is not default
+            };
+
+            return session;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading existing conversation session {conversationId}: {ex.Message}");
+            return null;
         }
     }
 
