@@ -5,6 +5,9 @@ export const apiRequest = async <T>(
 ): Promise<T> => {
   try {
     const url = `${config.serverUrl}${endpoint}`;
+    console.log("API Request URL:", url);
+    console.log("Config server URL:", config.serverUrl);
+    
     const isFormData =
       typeof options.body !== "undefined" && options.body instanceof FormData;
     const response = await fetch(url, {

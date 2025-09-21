@@ -83,3 +83,13 @@ export const analyticsService = {
     return apiRequest<GetDashboardMetricsResponse>(url);
   },
 };
+
+export const dashboardMetricsQueryOptions = (
+  organizationId: string,
+  request: GetDashboardMetricsRequest = {}
+) => ({
+  queryKey: ["dashboard-metrics", organizationId, request.timeRange, request.startDate, request.endDate],
+  queryFn: () => analyticsService.getDashboardMetrics(organizationId, request),
+  enabled: !!organizationId,
+  staleTime: 1000 * 60 * 5, // 5 minutes
+});

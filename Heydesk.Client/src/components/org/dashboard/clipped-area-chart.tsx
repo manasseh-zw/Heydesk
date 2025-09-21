@@ -103,7 +103,7 @@ export function ClippedAreaChart({ data }: ClippedAreaChartProps) {
             }}
             onMouseLeave={() => {
               springX.set(chartRef.current?.getBoundingClientRect().width || 0);
-              springY.jump(chartData[chartData.length - 1].mobile);
+              springY.jump(chartData[chartData.length - 1]?.conversations || 0);
             }}
             margin={{
               right: 0,
@@ -159,7 +159,7 @@ export function ClippedAreaChart({ data }: ClippedAreaChartProps) {
               textAnchor="middle"
               fill="var(--primary-foreground)"
             >
-              {springY.get().toFixed(0)}
+              {springY.get()?.toFixed(0) || "0"}
             </text>
             {/* this is a ghost line behind graph */}
             <Area

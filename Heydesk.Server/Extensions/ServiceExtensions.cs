@@ -38,9 +38,7 @@ public static class ServiceExtensions
                 ? AppConfig.Database.LocalConnectionString
                 : AppConfig.Database.CloudConnectionString;
 
-            options.UseNpgsql(
-                connectionString
-            );
+            options.UseNpgsql(connectionString);
         });
         return services;
     }
