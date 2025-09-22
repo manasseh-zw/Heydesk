@@ -32,6 +32,8 @@ interface ChatPageProps {
   chatId: string;
   orgSlug: string;
   organizationId: string;
+  // When true, skip fetching conversation history on mount (used for new chat from prompt-landing)
+  skipHistory?: boolean;
 }
 
 // Helper function to convert MessageResponse to ChatMessage
@@ -69,10 +71,10 @@ const convertMessageResponseToChatMessage = (
   };
 };
 
-export function ChatPage({ chatId, organizationId }: ChatPageProps) {
+export function ChatPage({ chatId, organizationId, skipHistory }: ChatPageProps) {
   // Use React Query to fetch conversation history reactively
   const { data: conversationHistory, isLoading: isLoadingHistory } =
-    useConversationWithMessages(organizationId, chatId);
+    useConversationWithMessages(organizationId, chatId, { enabled: !skipHistory });
 
   // Initialize and update messages when conversation history changes
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -155,7 +157,7 @@ export function ChatPage({ chatId, organizationId }: ChatPageProps) {
 
         // Check for pending initial message and send it (only for new conversations)
         const pendingMessage = chatActions.consumePendingInitialMessage();
-        if (pendingMessage && pendingMessage.trim() && !conversationHistory) {
+        if (pendingMessage && pendingMessage.trim()) {
           // This is a new conversation with an initial message
           setIsThinking(true);
           await chatService.sendMessage(chatId, pendingMessage.trim());
@@ -166,18 +168,18 @@ export function ChatPage({ chatId, organizationId }: ChatPageProps) {
       }
     };
 
-    // Only connect if not loading history
-    if (!isLoadingHistory) {
+    // If skipping history, connect immediately. Otherwise wait for history load.
+    if (skipHistory || !isLoadingHistory) {
       connectAndJoin();
     }
 
     return () => {
-      if (!isLoadingHistory) {
+      if (skipHistory || !isLoadingHistory) {
         chatService.leaveConversation(chatId);
         chatService.disconnect();
       }
     };
-  }, [chatService, chatId, conversationHistory, isLoadingHistory]);
+  }, [chatService, chatId, isLoadingHistory, skipHistory]);
 
   const handleSend = async () => {
     if (!input.trim() || !isConnected) return;

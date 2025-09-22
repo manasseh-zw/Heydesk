@@ -48,6 +48,8 @@ export const Route = createFileRoute("/support/$org/c/$chatId")({
 
 function RouteComponent() {
   const { chatId, orgSlug, organizationId } = Route.useLoaderData();
+  const search: any = Route.useSearch();
+  const skipHistory = search?.skipHistory === "1" || search?.skip === "1";
 
   return (
     <main className="h-screen-minus-sidebar flex flex-col overflow-hidden">
@@ -56,6 +58,7 @@ function RouteComponent() {
           chatId={chatId}
           orgSlug={orgSlug}
           organizationId={organizationId}
+          skipHistory={skipHistory}
         />
       </div>
     </main>
