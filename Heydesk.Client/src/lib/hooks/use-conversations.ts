@@ -15,12 +15,13 @@ export function useConversations(
 
 export function useConversationWithMessages(
   organizationId: string | undefined,
-  conversationId: string | undefined
+  conversationId: string | undefined,
+  options?: { enabled?: boolean }
 ) {
   return useQuery({
     queryKey: ["conversation", organizationId, conversationId],
     queryFn: () => conversationsService.getConversationWithMessages(organizationId!, conversationId!),
-    enabled: !!organizationId && !!conversationId,
+    enabled: (options?.enabled ?? true) && !!organizationId && !!conversationId,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }

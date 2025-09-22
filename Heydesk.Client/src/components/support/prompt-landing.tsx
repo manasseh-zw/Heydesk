@@ -124,6 +124,7 @@ export function PromptLanding({ onSubmit }: Props) {
           org: currentOrganizationSlug,
           chatId: conversationId,
         } as any,
+        search: { skipHistory: "1" } as any,
       });
     } catch (error) {
       console.error("Failed to start chat:", error);
