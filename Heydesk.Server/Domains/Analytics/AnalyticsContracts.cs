@@ -57,7 +57,7 @@ public record RecentActivity(
     string? UserAvatarUrl
 );
 
-public record GetDashboardMetricsRequest(
+public record   GetDashboardMetricsRequest(
     DateTime? StartDate = null,
     DateTime? EndDate = null,
     string? TimeRange = "7d" // "24h", "7d", "30d", "90d"

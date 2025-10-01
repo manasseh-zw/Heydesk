@@ -7,7 +7,7 @@ namespace Heydesk.Server.Domains.Analytics;
 
 [ApiController]
 [Route("api/organizations/{organizationId:guid}/analytics")]
-[Authorize(AuthenticationSchemes = "CustomerBearer")]
+[Authorize(AuthenticationSchemes = "UserBearer")]
 public class AnalyticsController : ControllerBase
 {
     private readonly IAnalyticsService _analyticsService;
@@ -34,13 +34,13 @@ public class AnalyticsController : ControllerBase
             $"Analytics endpoint hit! OrganizationId: {organizationId}, TimeRange: {timeRange}"
         );
 
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var customerId))
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
         {
-            Console.WriteLine("Customer not authenticated");
-            return Unauthorized("Customer not authenticated");
+            Console.WriteLine("User not authenticated");
+            return Unauthorized("User not authenticated");
         }
 
-        Console.WriteLine($"Customer ID: {customerId}");
+        Console.WriteLine($"User ID: {userId}");
 
         var request = new GetDashboardMetricsRequest(startDate, endDate, timeRange);
         var result = await _analyticsService.GetDashboardMetrics(organizationId, request);

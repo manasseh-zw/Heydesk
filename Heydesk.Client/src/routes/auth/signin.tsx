@@ -23,6 +23,21 @@ import { authActions } from "@/lib/state/auth.state";
 import ErrorAlert from "@/components/error-alert";
 import { Spinner } from "@/components/ui/shadcn-io/spinner";
 
+const getRedirectPath = (user: User): string => {
+  // If onboarding is not completed, redirect to onboarding
+  if (user.onboarding) {
+    return "/onboarding";
+  }
+
+  // If onboarding is completed and user has an organization, redirect to org dashboard
+  if (user.organization?.slug) {
+    return `/${user.organization.slug}`;
+  }
+
+  // Fallback to onboarding if no organization is found
+  return "/onboarding";
+};
+
 export const Route = createFileRoute("/auth/signin")({
   component: RouteComponent,
 });
@@ -50,7 +65,7 @@ function RouteComponent() {
       emailSignIn(data),
     onSuccess: (response: User) => {
       authActions.setUser(response);
-      navigate({ to: "/onboarding" });
+      navigate({ to: getRedirectPath(response) });
     },
     onError: (error: Error & { errors?: string[] }) => {
       if (error.errors && Array.isArray(error.errors)) {
@@ -65,7 +80,7 @@ function RouteComponent() {
     mutationFn: (accessToken: string) => googleAuth({ accessToken }),
     onSuccess: (response: User) => {
       authActions.setUser(response);
-      navigate({ to: "/onboarding" });
+      navigate({ to: getRedirectPath(response) });
     },
     onError: (error: Error & { errors?: string[] }) => {
       if (error.errors && Array.isArray(error.errors)) {
